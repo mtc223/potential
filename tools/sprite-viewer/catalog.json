@@ -1,0 +1,3300 @@
+{
+  "version": "1.0.0",
+  "description": "Life Simulator Asset Review Catalog",
+  "generated": "2026-04-01",
+  "lpcBase": "https://raw.githubusercontent.com/ElizaWy/LPC/main/",
+  "assets": [
+    {
+      "id": "char_body",
+      "name": "Character Body (Base Sheets)",
+      "subcategory": "char_player",
+      "source": "lpc",
+      "lpcPath": "Characters/Body/Body 01 - Feminine, Thin/Walk.png",
+      "notes": "Full LPC Character Generator \u2014 walk cycles in 4 directions, all life stages",
+      "tags": [
+        "characters",
+        "player"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Body",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "char_children",
+      "name": "Children Character Sheets",
+      "subcategory": "char_player",
+      "source": "lpc",
+      "lpcPath": "Characters/Children/Body 01 - Child/Walk.png",
+      "notes": "Toddler and child body types with walk cycles",
+      "tags": [
+        "characters",
+        "player",
+        "children"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Children",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "char_clothing",
+      "name": "Clothing Overlays",
+      "subcategory": "char_player",
+      "source": "lpc",
+      "lpcPath": "Characters/Clothing/Feminine, Thin/Casual 01/Walk.png",
+      "notes": "Full wardrobe library \u2014 casual, formal, profession uniforms",
+      "tags": [
+        "characters",
+        "player",
+        "npc"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Clothing",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "char_hair",
+      "name": "Hair Styles",
+      "subcategory": "char_player",
+      "source": "lpc",
+      "lpcPath": "Characters/Hair/Medium 01 - Page/Walk.png",
+      "tags": [
+        "characters",
+        "player",
+        "npc"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Hair",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "char_heads",
+      "name": "Head / Face Sheets",
+      "subcategory": "char_player",
+      "source": "lpc",
+      "lpcPath": "Characters/Head/Head 01/Walk.png",
+      "tags": [
+        "characters",
+        "player",
+        "npc"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Head",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "char_head_accessories",
+      "name": "Head Accessories",
+      "subcategory": "char_npc",
+      "source": "lpc",
+      "lpcPath": "Characters/Head Accessories/Hats 01/Walk.png",
+      "notes": "Hats, glasses, etc.",
+      "tags": [
+        "characters",
+        "npc"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Head Accessories",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "char_props",
+      "name": "Character Props (held items)",
+      "subcategory": "char_npc",
+      "source": "lpc",
+      "lpcPath": "Characters/Props/Tools/Walk.png",
+      "notes": "Books, tools, weapons held in-hand",
+      "tags": [
+        "characters",
+        "npc",
+        "items"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Characters/Props",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_sofa_casual",
+      "name": "Sofa, Casual",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Sofa, Casual A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Sofa, Casual (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_sofa_set",
+      "name": "Sofa Set, Casual",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Sofa Set, Casual A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Sofa Set, Casual (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_loveseat_patterned",
+      "name": "Loveseat, Casual Patterned",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Loveseat, Small - Casual Patterned A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Loveseat, Small - Casual Patterned (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_loveseat_solid",
+      "name": "Loveseat, Casual Solid",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Loveseat, Small - Casual Solid A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Loveseat, Small - Casual Solid (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_loveseat_formal",
+      "name": "Loveseat, Formal",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Loveseat, Small - Formal A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Loveseat, Small - Formal (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_chair_sofa_a",
+      "name": "Chair, Sofa A",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Sofa A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_chair_sofa_b",
+      "name": "Chair, Sofa B",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Sofa B.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (B).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_ottoman_long",
+      "name": "Ottoman, Long",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Ottoman, Long A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Ottoman, Long (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_ottoman_medium",
+      "name": "Ottoman, Medium",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Ottoman, Medium A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Ottoman, Medium (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_ottoman_small",
+      "name": "Ottoman, Small",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Ottoman, Small A.png",
+      "tags": [
+        "seating",
+        "living_room"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Ottoman, Small (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_tv",
+      "name": "TV, Widescreen",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/TV (Widescreen).png",
+      "notes": "Includes service/off state variants",
+      "tags": [
+        "living_room",
+        "teen_bedroom",
+        "media",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged during session with imgLoaded race condition bug; path is correct, image likely loads fine now"
+    },
+    {
+      "id": "lr_fireplace",
+      "name": "Fireplace",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Fireplace.png",
+      "tags": [
+        "living_room",
+        "decor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_fire_fireplace",
+      "name": "Fireplace Fire (animated)",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Fire, Fireplace.png",
+      "notes": "Animated overlay for lit fireplace",
+      "tags": [
+        "living_room",
+        "effects",
+        "fire"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Small Items/Fire Fireplace.png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_fireplace_accessories",
+      "name": "Fireplace Accessories",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Fireplace, Accessories A.png",
+      "tags": [
+        "living_room",
+        "decor",
+        "props"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Small Items/Fireplace Accessories A.png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_floor_lamp",
+      "name": "Floor Lamp",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Lighting (Floor).png",
+      "tags": [
+        "lighting",
+        "living_room",
+        "bedroom"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Floor lamp.png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "lr_shelf",
+      "name": "Bookshelf / Shelf",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Shelf.png",
+      "notes": "Works for living room, bedroom, office, school",
+      "tags": [
+        "storage",
+        "living_room",
+        "bedroom",
+        "office",
+        "school"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_planter",
+      "name": "Houseplant / Planter",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Planter.png",
+      "tags": [
+        "decor",
+        "living_room",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_end_table",
+      "name": "End Table / Side Table",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/End Table.png",
+      "tags": [
+        "furniture",
+        "living_room",
+        "bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_curtains",
+      "name": "Curtains",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Curtains.png",
+      "tags": [
+        "wall",
+        "decor",
+        "window",
+        "living_room",
+        "bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_painting_landscape",
+      "name": "Painting, Landscape",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Paintings, Landscape.png",
+      "tags": [
+        "wall",
+        "decor",
+        "living_room",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_painting_portrait",
+      "name": "Painting, Portraits",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Paintings, Portraits.png",
+      "tags": [
+        "wall",
+        "decor",
+        "living_room",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_painting_still_life",
+      "name": "Painting, Still Life",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Paintings, Still Life.png",
+      "tags": [
+        "wall",
+        "decor",
+        "living_room"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_painting_abstract",
+      "name": "Painting, Abstract",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Paintings, Abstract.png",
+      "tags": [
+        "wall",
+        "decor",
+        "living_room",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_rug_diamond",
+      "name": "Rug, Diamond (tiling)",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Rugs/Diamond Rug, tiling.png",
+      "tags": [
+        "floor",
+        "living_room",
+        "bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_rug_rainbow_check",
+      "name": "Rug, Rainbow Checkered",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Rugs/Rainbow Checkered Rug.png",
+      "tags": [
+        "floor",
+        "living_room",
+        "child_bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_rug_vine",
+      "name": "Rug, Swirling Vine",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Rugs/Swirling Vine Rug.png",
+      "tags": [
+        "floor",
+        "living_room"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_games",
+      "name": "Tabletop Games",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Games.png",
+      "notes": "Board games, cards",
+      "tags": [
+        "props",
+        "living_room",
+        "child_bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_rotary_phone",
+      "name": "Rotary Phone",
+      "subcategory": "living_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Rotary Phones.png",
+      "notes": "Era-specific prop \u2014 early life",
+      "tags": [
+        "props",
+        "living_room",
+        "vintage"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lr_coffee_table",
+      "name": "Coffee Table",
+      "subcategory": "living_room",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "LPC has rough wood / card tables but no dedicated coffee table",
+      "tags": [
+        "furniture",
+        "living_room"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_fridge",
+      "name": "Refrigerator",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Fridge.png",
+      "notes": "Open and closed states",
+      "tags": [
+        "kitchen",
+        "appliance"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_oven",
+      "name": "Oven / Stove (Modern)",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Oven (Modern).png",
+      "tags": [
+        "kitchen",
+        "appliance"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_sink_counter",
+      "name": "Sink (Countertop)",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Sink (Countertop).png",
+      "tags": [
+        "kitchen",
+        "plumbing"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_cabinet",
+      "name": "Kitchen Cabinet",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Cabinet.png",
+      "notes": "Also works as office filing cabinet",
+      "tags": [
+        "kitchen",
+        "storage",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_countertop",
+      "name": "Countertop",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Countertop.png",
+      "tags": [
+        "kitchen",
+        "surface"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_table_rough",
+      "name": "Dining Table, Rough Wood",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Rough Wood).png",
+      "tags": [
+        "kitchen",
+        "dining",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_table_ornate",
+      "name": "Dining Table, Ornate Wood",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Ornate Wood).png",
+      "tags": [
+        "kitchen",
+        "dining",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_table_card",
+      "name": "Small Table, Card Table",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Card).png",
+      "tags": [
+        "kitchen",
+        "dining",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_chair_dining_a",
+      "name": "Chair, Dining A",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Dining A.png",
+      "tags": [
+        "kitchen",
+        "seating",
+        "dining",
+        "school"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "kitch_chair_dining_b",
+      "name": "Chair, Dining B",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Dining B.png",
+      "tags": [
+        "kitchen",
+        "seating",
+        "dining"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (B).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "kitch_bar_stools",
+      "name": "Bar Stools",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Bar Stools.png",
+      "tags": [
+        "kitchen",
+        "seating"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_coffee_maker",
+      "name": "Coffee Maker",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Coffee Maker.png",
+      "tags": [
+        "kitchen",
+        "appliance",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_dishes",
+      "name": "Dishes",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Dishes A.png",
+      "tags": [
+        "kitchen",
+        "items",
+        "props"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_clutter",
+      "name": "Kitchen Clutter Props",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Kitchen Clutter A.png",
+      "tags": [
+        "kitchen",
+        "items",
+        "props"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_baskets",
+      "name": "Baskets",
+      "subcategory": "kitchen",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Baskets A.png",
+      "tags": [
+        "props",
+        "kitchen",
+        "outdoor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_microwave",
+      "name": "Microwave",
+      "subcategory": "kitchen",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "kitchen",
+        "appliance",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_highchair",
+      "name": "Highchair",
+      "subcategory": "kitchen",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Baby/toddler era only",
+      "tags": [
+        "kitchen",
+        "nursery",
+        "baby",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_toaster",
+      "name": "Toaster",
+      "subcategory": "kitchen",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "kitchen",
+        "appliance"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_fruit_bowl",
+      "name": "Fruit Bowl",
+      "subcategory": "kitchen",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "kitchen",
+        "props",
+        "decor"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "kitch_dish_rack",
+      "name": "Dish Rack",
+      "subcategory": "kitchen",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "kitchen",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_sink_pedestal",
+      "name": "Sink / Vanity (Pedestal)",
+      "subcategory": "bathroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Sink (Pedestal).png",
+      "tags": [
+        "bathroom",
+        "plumbing"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_mirror_wall",
+      "name": "Mirror (Wall-mounted)",
+      "subcategory": "bathroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Mirrors.png",
+      "tags": [
+        "bathroom",
+        "bedroom",
+        "wall"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_mirror_standing",
+      "name": "Mirror (Standing)",
+      "subcategory": "bathroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Mirror (Standing).png",
+      "tags": [
+        "bathroom",
+        "bedroom",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_toilet",
+      "name": "Toilet",
+      "subcategory": "bathroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "bathroom",
+        "plumbing"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_bathtub",
+      "name": "Bathtub / Shower",
+      "subcategory": "bathroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "bathroom",
+        "plumbing"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_towel_rack",
+      "name": "Towel Rack",
+      "subcategory": "bathroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "bathroom",
+        "wall"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_medicine_cabinet",
+      "name": "Medicine Cabinet",
+      "subcategory": "bathroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "bathroom",
+        "storage",
+        "wall"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bath_rubber_duck",
+      "name": "Rubber Duck",
+      "subcategory": "bathroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Bathtub prop, childhood era",
+      "tags": [
+        "bathroom",
+        "nursery",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_bed_double",
+      "name": "Double Bed",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Double.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_bed_double_b",
+      "name": "Double Bed B",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Double B.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_bed_double_c",
+      "name": "Double Bed C",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Double C.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_bed_double_headboards",
+      "name": "Double Bed Headboards",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Double Headboards.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_bed_double_mattresses",
+      "name": "Double Bed Mattresses",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Double Mattresses.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_dresser",
+      "name": "Dresser",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Dresser.png",
+      "tags": [
+        "bedroom",
+        "storage",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_end_table",
+      "name": "Nightstand / End Table",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/End Table.png",
+      "tags": [
+        "bedroom",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_vanity_desk",
+      "name": "Vanity Desk",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Desk (Vanity).png",
+      "tags": [
+        "bedroom",
+        "furniture",
+        "mirror"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_bin",
+      "name": "Laundry Hamper / Bin",
+      "subcategory": "parents_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Bin.png",
+      "tags": [
+        "bedroom",
+        "storage"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "pb_wardrobe",
+      "name": "Wardrobe / Closet",
+      "subcategory": "parents_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Double-door wardrobe",
+      "tags": [
+        "bedroom",
+        "storage",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_bed_child",
+      "name": "Child Bed",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Child.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_bed_child_headboards",
+      "name": "Child Bed Headboards",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Child Headboards.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_bed_child_mattresses",
+      "name": "Child Bed Mattresses",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Child Mattresses.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_bed_single_a",
+      "name": "Single Bed A",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Single A.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged during session with imgLoaded race condition bug; path is correct, image likely loads fine now"
+    },
+    {
+      "id": "cb_bed_single_headboards",
+      "name": "Single Bed Headboards",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Single Headboards.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_shelf",
+      "name": "Bookshelf (Small)",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Shelf.png",
+      "tags": [
+        "storage",
+        "bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_pillows",
+      "name": "Pillows / Stuffed Animals",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Pillows.png",
+      "tags": [
+        "bedroom",
+        "props",
+        "decor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_flowers",
+      "name": "Flowers / Small Plants",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Flowers.png",
+      "tags": [
+        "decor",
+        "bedroom",
+        "props"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_chest",
+      "name": "Toy Chest / Storage Chest",
+      "subcategory": "child_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Chest.png",
+      "tags": [
+        "storage",
+        "bedroom",
+        "attic",
+        "toys"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_desk_child",
+      "name": "Desk (Child)",
+      "subcategory": "child_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Small desk, child height, crayons/paper props",
+      "tags": [
+        "bedroom",
+        "furniture",
+        "school"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_lego",
+      "name": "Lego / Building Blocks",
+      "subcategory": "child_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Floor scatter prop",
+      "tags": [
+        "bedroom",
+        "toys",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cb_stuffed_animals",
+      "name": "Stuffed Animals",
+      "subcategory": "child_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Floor and bed props",
+      "tags": [
+        "bedroom",
+        "nursery",
+        "toys",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_bed_single_b",
+      "name": "Single Bed B",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Single B.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_bed_single_c",
+      "name": "Single Bed C",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Single C.png",
+      "tags": [
+        "bedroom",
+        "sleep",
+        "furniture"
+      ],
+      "decision": "rejected",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_desk_office",
+      "name": "Desk (Adult / Teen)",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Desk (Office).png",
+      "tags": [
+        "bedroom",
+        "office",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_chair_office",
+      "name": "Desk Chair (Rolling)",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Office.png",
+      "tags": [
+        "bedroom",
+        "office",
+        "seating"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_laptop",
+      "name": "Laptop",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Laptop.png",
+      "tags": [
+        "tech",
+        "bedroom",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_posters",
+      "name": "Posters (Band / Sports / Movie)",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Posters.png",
+      "tags": [
+        "wall",
+        "decor",
+        "teen_bedroom",
+        "school_hallway"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_shelf_tall",
+      "name": "Bookshelf (Tall)",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Shelf.png",
+      "tags": [
+        "storage",
+        "bedroom"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_mirror_standing",
+      "name": "Full-Length Mirror",
+      "subcategory": "teen_bedroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Mirror (Standing).png",
+      "tags": [
+        "bedroom",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_gaming_setup",
+      "name": "Gaming Setup",
+      "subcategory": "teen_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Chair + desk arrangement with gaming peripherals",
+      "tags": [
+        "teen_bedroom",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_guitar",
+      "name": "Guitar / Instrument",
+      "subcategory": "teen_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Leaning against wall",
+      "tags": [
+        "teen_bedroom",
+        "music",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_weights",
+      "name": "Dumbbell / Weights",
+      "subcategory": "teen_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Floor prop",
+      "tags": [
+        "teen_bedroom",
+        "fitness"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "tb_clothes_floor",
+      "name": "Clothes on Floor",
+      "subcategory": "teen_bedroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Scatter prop, messy bedroom aesthetic",
+      "tags": [
+        "teen_bedroom",
+        "props",
+        "decor"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nur_crib",
+      "name": "Crib",
+      "subcategory": "nursery",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "With and without mobile overhead",
+      "tags": [
+        "nursery",
+        "baby",
+        "sleep"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nur_changing_table",
+      "name": "Changing Table",
+      "subcategory": "nursery",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "With diaper supplies on shelf",
+      "tags": [
+        "nursery",
+        "baby",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nur_rocking_chair",
+      "name": "Rocking Chair",
+      "subcategory": "nursery",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Sofa A.png",
+      "notes": "Standard LPC sofa chair, may need rocking variant edit",
+      "tags": [
+        "nursery",
+        "seating",
+        "baby"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "nur_baby_monitor",
+      "name": "Baby Monitor",
+      "subcategory": "nursery",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "nursery",
+        "baby",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nur_stuffed_animals",
+      "name": "Soft Toys / Stuffed Animals",
+      "subcategory": "nursery",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Floor-placed variants",
+      "tags": [
+        "nursery",
+        "baby",
+        "toys"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nur_toy_chest",
+      "name": "Toy Chest",
+      "subcategory": "nursery",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Chest.png",
+      "tags": [
+        "nursery",
+        "storage",
+        "toys"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nur_night_light",
+      "name": "Night Light",
+      "subcategory": "nursery",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Plugged into wall, soft glow",
+      "tags": [
+        "nursery",
+        "lighting",
+        "baby"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_workbench",
+      "name": "Workbench (Carpentry)",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Workbench (Carpentry).png",
+      "tags": [
+        "workshop",
+        "basement",
+        "construction",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_table_workshop",
+      "name": "Workshop Table",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Workshop).png",
+      "tags": [
+        "workshop",
+        "basement",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_crate",
+      "name": "Storage Crate",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Crate.png",
+      "tags": [
+        "storage",
+        "basement",
+        "warehouse"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_barrel",
+      "name": "Storage Barrel",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Barrel.png",
+      "tags": [
+        "storage",
+        "basement"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_boxes",
+      "name": "Cardboard Boxes",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Boxes.png",
+      "tags": [
+        "storage",
+        "basement",
+        "attic",
+        "warehouse"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_sawhorse",
+      "name": "Sawhorses",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Sawhorse.png",
+      "tags": [
+        "workshop",
+        "basement",
+        "construction"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_ladder",
+      "name": "Ladder",
+      "subcategory": "basement",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Ladder.png",
+      "tags": [
+        "basement",
+        "attic",
+        "construction",
+        "structure"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_washer",
+      "name": "Washer",
+      "subcategory": "basement",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "basement",
+        "appliance"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_dryer",
+      "name": "Dryer",
+      "subcategory": "basement",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "basement",
+        "appliance"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "bas_ping_pong",
+      "name": "Ping Pong Table",
+      "subcategory": "basement",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "basement",
+        "recreation"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "att_boxes",
+      "name": "Dusty Boxes (Attic)",
+      "subcategory": "attic",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Boxes.png",
+      "tags": [
+        "attic",
+        "storage"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "att_chest",
+      "name": "Old Trunk / Chest",
+      "subcategory": "attic",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Chest.png",
+      "tags": [
+        "attic",
+        "storage"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "att_ladder",
+      "name": "Ladder",
+      "subcategory": "attic",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Ladder.png",
+      "tags": [
+        "attic",
+        "structure"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cls_teacher_desk",
+      "name": "Teacher's Desk",
+      "subcategory": "classroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Desk (Office).png",
+      "tags": [
+        "classroom",
+        "furniture",
+        "school"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cls_student_chair",
+      "name": "Student Chair",
+      "subcategory": "classroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Dining A.png",
+      "tags": [
+        "classroom",
+        "seating",
+        "school"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "cls_shelf",
+      "name": "Bookshelf (Classroom)",
+      "subcategory": "classroom",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Shelf.png",
+      "tags": [
+        "classroom",
+        "storage",
+        "school"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cls_student_desks",
+      "name": "Student Desks (Row)",
+      "subcategory": "classroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Single-seat row arrangement",
+      "tags": [
+        "classroom",
+        "school",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cls_chalkboard",
+      "name": "Chalkboard / Whiteboard",
+      "subcategory": "classroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Full-width wall tile",
+      "tags": [
+        "classroom",
+        "school",
+        "wall"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cls_globe",
+      "name": "Globe",
+      "subcategory": "classroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Desk prop",
+      "tags": [
+        "classroom",
+        "props",
+        "school"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "cls_clock",
+      "name": "Clock (Wall)",
+      "subcategory": "classroom",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "classroom",
+        "school",
+        "wall",
+        "office"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "hall_lockers",
+      "name": "Lockers (Row)",
+      "subcategory": "school_hallway",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Open and closed states, tiling",
+      "tags": [
+        "school",
+        "hallway",
+        "storage"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "hall_bulletin_board",
+      "name": "Bulletin Board (Hallway)",
+      "subcategory": "school_hallway",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "school",
+        "hallway",
+        "wall"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "hall_trophy_case",
+      "name": "Trophy Case",
+      "subcategory": "school_hallway",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "school",
+        "hallway",
+        "decor"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "caf_long_table",
+      "name": "Long Cafeteria Table",
+      "subcategory": "school_cafeteria",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Workshop).png",
+      "notes": "Workshop table works as long cafeteria table",
+      "tags": [
+        "school",
+        "cafeteria",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "caf_vending",
+      "name": "Vending Machine",
+      "subcategory": "school_cafeteria",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Vending Machine.png",
+      "tags": [
+        "school",
+        "cafeteria",
+        "office"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "caf_dishes",
+      "name": "Lunch Tray / Dishes",
+      "subcategory": "school_cafeteria",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Dishes A.png",
+      "tags": [
+        "school",
+        "cafeteria",
+        "props"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "caf_service_counter",
+      "name": "Food Service Counter",
+      "subcategory": "school_cafeteria",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "With sneeze guard",
+      "tags": [
+        "school",
+        "cafeteria",
+        "restaurant",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lib_bookshelf_tall",
+      "name": "Tall Bookshelf (Double-sided)",
+      "subcategory": "school_library",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Shelf.png",
+      "tags": [
+        "school",
+        "library",
+        "storage"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "lib_reading_table",
+      "name": "Reading Table",
+      "subcategory": "school_library",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Ornate Wood).png",
+      "tags": [
+        "school",
+        "library",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_desk",
+      "name": "Office Desk",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Desk (Office).png",
+      "tags": [
+        "office",
+        "furniture",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_chair",
+      "name": "Office Chair (Rolling)",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Office.png",
+      "tags": [
+        "office",
+        "seating",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_cabinet",
+      "name": "Filing Cabinet",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Cabinet.png",
+      "tags": [
+        "office",
+        "storage",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_water_cooler",
+      "name": "Water Cooler",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Water Cooler.png",
+      "tags": [
+        "office",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_copier",
+      "name": "Printer / Copier",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Copy Machine.png",
+      "tags": [
+        "office",
+        "work",
+        "tech"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_vending",
+      "name": "Vending Machine (Office)",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Vending Machine.png",
+      "tags": [
+        "office",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_coffee",
+      "name": "Coffee Machine",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Coffee Maker.png",
+      "tags": [
+        "office",
+        "kitchen",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_laptop",
+      "name": "Laptop",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Laptop.png",
+      "tags": [
+        "office",
+        "work",
+        "tech"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_loose_paper",
+      "name": "Loose Paper / Documents",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Loose Paper.png",
+      "tags": [
+        "office",
+        "props"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_shelf",
+      "name": "Bookshelf (Office)",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Shelf.png",
+      "tags": [
+        "office",
+        "storage"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_planter",
+      "name": "Office Plant",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Planter.png",
+      "tags": [
+        "office",
+        "decor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_motivational_poster",
+      "name": "Motivational Poster",
+      "subcategory": "office",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Posters.png",
+      "notes": "Posters exist in LPC, ironic office variant",
+      "tags": [
+        "office",
+        "wall",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_whiteboard",
+      "name": "Whiteboard on Stand",
+      "subcategory": "office",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "office",
+        "work",
+        "school"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "off_conference_table",
+      "name": "Conference Table (10-person)",
+      "subcategory": "office",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "office",
+        "work",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_crate",
+      "name": "Wooden Crates / Pallets",
+      "subcategory": "warehouse",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Crate.png",
+      "tags": [
+        "warehouse",
+        "storage",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_boxes",
+      "name": "Cardboard Boxes (Stacked)",
+      "subcategory": "warehouse",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Boxes.png",
+      "tags": [
+        "warehouse",
+        "storage",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_barrel",
+      "name": "Barrels",
+      "subcategory": "warehouse",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Barrel.png",
+      "tags": [
+        "warehouse",
+        "storage",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_pallet_jack",
+      "name": "Pallet Jack",
+      "subcategory": "warehouse",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "warehouse",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_forklift",
+      "name": "Forklift",
+      "subcategory": "warehouse",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "warehouse",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_metal_shelving",
+      "name": "Metal Shelving (Tall)",
+      "subcategory": "warehouse",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Floor-to-ceiling tile",
+      "tags": [
+        "warehouse",
+        "storage",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_conveyor",
+      "name": "Conveyor Belt",
+      "subcategory": "warehouse",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Animated, directional",
+      "tags": [
+        "warehouse",
+        "factory",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "wh_hard_hat",
+      "name": "Hard Hat (Hanging)",
+      "subcategory": "warehouse",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Wall hook prop",
+      "tags": [
+        "warehouse",
+        "construction",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_sawhorse",
+      "name": "Sawhorses",
+      "subcategory": "construction",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Sawhorse.png",
+      "tags": [
+        "construction",
+        "workshop",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_lumber",
+      "name": "Lumber Stack",
+      "subcategory": "construction",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Lumber.png",
+      "tags": [
+        "construction",
+        "work",
+        "props"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_workbench",
+      "name": "Workbench (with tools)",
+      "subcategory": "construction",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Workbench (Carpentry).png",
+      "tags": [
+        "construction",
+        "workshop",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_toolbox",
+      "name": "Toolbox",
+      "subcategory": "construction",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Open and closed states",
+      "tags": [
+        "construction",
+        "work",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_scaffolding",
+      "name": "Scaffolding",
+      "subcategory": "construction",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Modular tile, multiple heights",
+      "tags": [
+        "construction",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_cement_mixer",
+      "name": "Cement Mixer",
+      "subcategory": "construction",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Animated",
+      "tags": [
+        "construction",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "con_safety_cones",
+      "name": "Safety Cones",
+      "subcategory": "construction",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Orange, scatter prop",
+      "tags": [
+        "construction",
+        "work",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "auto_lift",
+      "name": "Car on Hydraulic Lift",
+      "subcategory": "auto_repair",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Raised, silhouette",
+      "tags": [
+        "auto_repair",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "auto_pegboard",
+      "name": "Tool Pegboard",
+      "subcategory": "auto_repair",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Wall tile with tools",
+      "tags": [
+        "auto_repair",
+        "work",
+        "wall"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "auto_creeper",
+      "name": "Creeper Dolly",
+      "subcategory": "auto_repair",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Floor prop",
+      "tags": [
+        "auto_repair",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "fac_conveyor",
+      "name": "Assembly Line Conveyor",
+      "subcategory": "factory",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Animated, directional tile",
+      "tags": [
+        "factory",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "fac_press",
+      "name": "Industrial Press",
+      "subcategory": "factory",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "factory",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "fac_robot_arm",
+      "name": "Robotic Arm (silhouette)",
+      "subcategory": "factory",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Background prop",
+      "tags": [
+        "factory",
+        "work",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "rest_prep_table",
+      "name": "Long Prep Table",
+      "subcategory": "restaurant",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Workshop).png",
+      "notes": "Workshop table works as stainless prep table",
+      "tags": [
+        "restaurant",
+        "kitchen",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "rest_grill",
+      "name": "Industrial Flat Top Grill",
+      "subcategory": "restaurant",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "restaurant",
+        "kitchen",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "rest_fryer",
+      "name": "Deep Fryer",
+      "subcategory": "restaurant",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "restaurant",
+        "kitchen",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "rest_pos",
+      "name": "POS Terminal",
+      "subcategory": "restaurant",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Counter-top",
+      "tags": [
+        "restaurant",
+        "retail",
+        "work",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "ret_shopping_cart",
+      "name": "Shopping Cart",
+      "subcategory": "retail",
+      "source": "lpc",
+      "lpcPath": "Objects/Moveable/Shopping Cart.png",
+      "tags": [
+        "retail",
+        "work"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "ret_cash_register",
+      "name": "Cash Register / POS",
+      "subcategory": "retail",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "retail",
+        "work",
+        "tech"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "ret_shelving",
+      "name": "Retail Shelving Units",
+      "subcategory": "retail",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Aisle tile, stocked and sparse",
+      "tags": [
+        "retail",
+        "work",
+        "storage"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "jan_mop",
+      "name": "Mop and Bucket (Wheeled)",
+      "subcategory": "janitorial",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "janitorial",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "jan_floor_buffer",
+      "name": "Industrial Floor Buffer",
+      "subcategory": "janitorial",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "janitorial",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "jan_wet_floor",
+      "name": "Caution Wet Floor Sign",
+      "subcategory": "janitorial",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Yellow, foldable",
+      "tags": [
+        "janitorial",
+        "work",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "jan_supply_cart",
+      "name": "Supply Cart (Rolling)",
+      "subcategory": "janitorial",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "janitorial",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_wheelchair_black",
+      "name": "Wheelchair (Black)",
+      "subcategory": "hospital_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Moveable/Wheelchair, Black.png",
+      "tags": [
+        "medical",
+        "nursing_home",
+        "mobility"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_wheelchair_blue",
+      "name": "Wheelchair (Blue)",
+      "subcategory": "hospital_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Moveable/Wheelchair, Blue.png",
+      "tags": [
+        "medical",
+        "nursing_home",
+        "mobility"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_wheelchair_white",
+      "name": "Wheelchair (White)",
+      "subcategory": "hospital_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Moveable/Wheelchair, White.png",
+      "tags": [
+        "medical",
+        "nursing_home",
+        "mobility"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_hospital_bed",
+      "name": "Hospital Bed",
+      "subcategory": "hospital_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Single B.png",
+      "notes": "Single bed used as hospital bed, may need white linen edit",
+      "tags": [
+        "hospital_room",
+        "nursing_home",
+        "medical",
+        "sleep"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_curtain_divider",
+      "name": "Curtain Room Divider",
+      "subcategory": "hospital_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Curtains.png",
+      "notes": "Standard curtains repurposed as hospital room divider",
+      "tags": [
+        "hospital_room",
+        "medical"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_iv_stand",
+      "name": "IV Stand (with bag)",
+      "subcategory": "hospital_room",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "hospital_room",
+        "medical"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "med_visitor_chair",
+      "name": "Visitor Chair",
+      "subcategory": "hospital_room",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Dining A.png",
+      "notes": "Plain dining chair works as visitor chair",
+      "tags": [
+        "hospital_room",
+        "medical",
+        "seating"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "nh_wheelchair_tan",
+      "name": "Wheelchair (Tan)",
+      "subcategory": "nursing_home",
+      "source": "lpc",
+      "lpcPath": "Objects/Moveable/Wheelchair, Tan.png",
+      "tags": [
+        "nursing_home",
+        "medical",
+        "mobility"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nh_bed",
+      "name": "Hospital-Style Bed",
+      "subcategory": "nursing_home",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Beds/Beds, Single B.png",
+      "notes": "Used as nursing home bed",
+      "tags": [
+        "nursing_home",
+        "medical",
+        "sleep"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nh_walker",
+      "name": "Walker",
+      "subcategory": "nursing_home",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Beside bed",
+      "tags": [
+        "nursing_home",
+        "medical",
+        "mobility"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nh_medication_tray",
+      "name": "Medication Tray",
+      "subcategory": "nursing_home",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Bedside prop",
+      "tags": [
+        "nursing_home",
+        "medical",
+        "props"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nh_common_chairs",
+      "name": "Comfortable Chairs (Common Room)",
+      "subcategory": "nursing_home",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Seating/Chair, Sofa A.png",
+      "tags": [
+        "nursing_home",
+        "seating"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (A).png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "nh_puzzle_table",
+      "name": "Puzzle Table",
+      "subcategory": "nursing_home",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Table (Card).png",
+      "notes": "Card table works as puzzle table",
+      "tags": [
+        "nursing_home",
+        "props",
+        "furniture"
+      ],
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged during session with imgLoaded race condition bug; path is correct, image likely loads fine now"
+    },
+    {
+      "id": "out_mailbox",
+      "name": "Mailbox",
+      "subcategory": "residential_outdoor",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Mailboxes (tiling).png",
+      "tags": [
+        "outdoor",
+        "residential",
+        "wall"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_fence_plain",
+      "name": "Fence, Plain",
+      "subcategory": "residential_outdoor",
+      "source": "lpc",
+      "lpcPath": "Structure/Fences/Plain Fence A.png",
+      "tags": [
+        "outdoor",
+        "residential",
+        "structure",
+        "fence"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_fence_ornamental_a",
+      "name": "Fence, Ornamental A",
+      "subcategory": "residential_outdoor",
+      "source": "lpc",
+      "lpcPath": "Structure/Fences/Ornamental Fence A.png",
+      "tags": [
+        "outdoor",
+        "residential",
+        "structure",
+        "fence"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_fence_ornamental_b",
+      "name": "Fence, Ornamental B",
+      "subcategory": "residential_outdoor",
+      "source": "lpc",
+      "lpcPath": "Structure/Fences/Ornamental Fence B.png",
+      "tags": [
+        "outdoor",
+        "residential",
+        "structure",
+        "fence"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_flowers_garden",
+      "name": "Flower Beds / Garden",
+      "subcategory": "residential_outdoor",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Flowers.png",
+      "tags": [
+        "outdoor",
+        "residential",
+        "decor",
+        "nature"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_planter_outdoor",
+      "name": "Outdoor Planter",
+      "subcategory": "residential_outdoor",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Planter.png",
+      "tags": [
+        "outdoor",
+        "residential",
+        "decor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_bbq",
+      "name": "BBQ Grill",
+      "subcategory": "residential_outdoor",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Patio prop",
+      "tags": [
+        "outdoor",
+        "residential"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_basketball_hoop",
+      "name": "Driveway Basketball Hoop",
+      "subcategory": "residential_outdoor",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "outdoor",
+        "residential",
+        "sports"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_swing_set",
+      "name": "Swing Set",
+      "subcategory": "playground",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Backyard / playground",
+      "tags": [
+        "playground",
+        "outdoor",
+        "childhood",
+        "residential"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "out_trampoline",
+      "name": "Trampoline",
+      "subcategory": "residential_outdoor",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Backyard",
+      "tags": [
+        "outdoor",
+        "residential",
+        "childhood"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "urban_graffiti",
+      "name": "Graffiti Wall",
+      "subcategory": "urban_street",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Graffiti.png",
+      "tags": [
+        "urban",
+        "outdoor",
+        "decor",
+        "wall"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "urban_graffiti_elements",
+      "name": "Graffiti Elements",
+      "subcategory": "urban_street",
+      "source": "lpc",
+      "lpcPath": "Objects/Wall Items/Graffiti Elements.png",
+      "tags": [
+        "urban",
+        "outdoor",
+        "decor",
+        "wall"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "urban_vending",
+      "name": "Street Vending Machine",
+      "subcategory": "urban_street",
+      "source": "lpc",
+      "lpcPath": "Objects/Furniture/Vending Machine.png",
+      "tags": [
+        "urban",
+        "outdoor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "nat_campfire",
+      "name": "Campfire",
+      "subcategory": "nature",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Fire, Camp.png",
+      "notes": "Animated flame",
+      "tags": [
+        "outdoor",
+        "nature",
+        "camping",
+        "fire"
+      ],
+      "lpcPathFixed": true,
+      "lpcPathOld": "Objects/Small Items/Fire Camp.png",
+      "decision": "flagged",
+      "decisionNotes": "",
+      "needsReReview": true,
+      "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"
+    },
+    {
+      "id": "nat_flowers",
+      "name": "Wildflowers / Plants",
+      "subcategory": "nature",
+      "source": "lpc",
+      "lpcPath": "Objects/Small Items/Flowers.png",
+      "tags": [
+        "outdoor",
+        "nature",
+        "decor"
+      ],
+      "decision": "approved",
+      "decisionNotes": ""
+    },
+    {
+      "id": "spec_gravestone",
+      "name": "Cemetery Gravestones",
+      "subcategory": "special",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Multiple styles, weathered",
+      "tags": [
+        "cemetery",
+        "special",
+        "late_life",
+        "outdoor"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "spec_iron_fence",
+      "name": "Iron Fence (Cemetery)",
+      "subcategory": "special",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Tile",
+      "tags": [
+        "cemetery",
+        "special",
+        "outdoor",
+        "structure"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "spec_weeping_willow",
+      "name": "Weeping Willow",
+      "subcategory": "special",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "tags": [
+        "cemetery",
+        "special",
+        "outdoor",
+        "nature"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_car_front",
+      "name": "Car Interior, Front Seat",
+      "subcategory": "vehicle_car",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Dashboard, steering wheel, gear shift, rearview mirror",
+      "tags": [
+        "vehicles",
+        "car"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_car_back",
+      "name": "Car Interior, Back Seat",
+      "subcategory": "vehicle_car",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Bench seat, window view, behind headrests",
+      "tags": [
+        "vehicles",
+        "car"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_school_bus",
+      "name": "School Bus Interior",
+      "subcategory": "vehicle_bus",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Rows of green seats, aisle, large windows, driver compartment",
+      "tags": [
+        "vehicles",
+        "school",
+        "childhood"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_bigrig",
+      "name": "Big Rig Cab Interior",
+      "subcategory": "vehicle_bigrig",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Wide dashboard, CB radio, gauges, cup holder, sleeper bunk",
+      "tags": [
+        "vehicles",
+        "trucking",
+        "work"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_airplane",
+      "name": "Airplane Cabin",
+      "subcategory": "vehicle_airplane",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "3+3 seats, overhead bins, small oval windows, aisle",
+      "tags": [
+        "vehicles",
+        "travel",
+        "special"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_subway",
+      "name": "Subway Car Interior",
+      "subcategory": "vehicle_subway",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Bench seats along walls, hanging rails, doors, route map overhead",
+      "tags": [
+        "vehicles",
+        "urban"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    },
+    {
+      "id": "veh_bicycle",
+      "name": "Bicycle",
+      "subcategory": "vehicle_bicycle",
+      "source": "gap",
+      "lpcPath": null,
+      "needsGeneration": true,
+      "notes": "Exterior prop / player mount",
+      "tags": [
+        "vehicles",
+        "outdoor",
+        "childhood",
+        "teen_bedroom"
+      ],
+      "decision": "flagged",
+      "decisionNotes": ""
+    }
+  ],
+  "lastReviewDate": "2026-04-04",
+  "reviewSummary": {
+    "approved": 91,
+    "flagged": 126,
+    "rejected": 1,
+    "maybe": 0,
+    "pending": 0,
+    "pathsFixed": 27,
+    "needsReReview": 30
+  }
+}

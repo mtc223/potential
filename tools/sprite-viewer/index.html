@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Potential — Sprite Review</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; overflow: hidden; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
+    .pixel-art { image-rendering: pixelated; image-rendering: crisp-edges; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .fade-in { animation: fadeIn 0.15s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-in { animation: slideIn 0.18s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+    .checkerboard {
+      background-image: linear-gradient(45deg, #334155 25%, transparent 25%),
+        linear-gradient(-45deg, #334155 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #334155 75%),
+        linear-gradient(-45deg, transparent 75%, #334155 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+      background-color: #1e293b;
+    }
+    .editor-canvas-wrap { overflow: auto; flex: 1; background: #0f172a; }
+    .pixel-cursor { cursor: crosshair; }
+    .eyedrop-cursor { cursor: cell; }
+    .eraser-cursor { cursor: default; }
+    .tree-item:hover { background: rgba(99,102,241,0.1); }
+    .tree-item.active { background: rgba(99,102,241,0.2); border-left: 2px solid #6366f1; }
+    .card-hover:hover { border-color: #6366f1; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99,102,241,0.2); }
+    .card-approved { border-color: #16a34a !important; }
+    .card-rejected { border-color: #dc2626 !important; }
+    .card-maybe    { border-color: #ca8a04 !important; }
+    .card-flagged  { border-color: #ea580c !important; }
+    .tag { display: inline-block; background: #1e293b; border: 1px solid #334155; border-radius: 4px; padding: 1px 6px; font-size: 10px; color: #94a3b8; margin: 1px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+
+const LPC_BASE = 'https://raw.githubusercontent.com/ElizaWy/LPC/main/';
+
+const STATUS = {
+  pending:  { label: 'Pending',  bg: 'bg-slate-600',  text: 'text-slate-200',  ring: 'ring-slate-500',  dot: '#94a3b8', icon: '○', cardClass: '' },
+  approved: { label: 'Approved', bg: 'bg-green-800',  text: 'text-green-200',  ring: 'ring-green-600',  dot: '#16a34a', icon: '✓', cardClass: 'card-approved' },
+  rejected: { label: 'Rejected', bg: 'bg-red-900',    text: 'text-red-200',    ring: 'ring-red-700',    dot: '#dc2626', icon: '✗', cardClass: 'card-rejected' },
+  maybe:    { label: 'Maybe',    bg: 'bg-yellow-800', text: 'text-yellow-200', ring: 'ring-yellow-600', dot: '#ca8a04', icon: '?', cardClass: 'card-maybe' },
+  flagged:  { label: 'Flagged',  bg: 'bg-orange-800', text: 'text-orange-200', ring: 'ring-orange-600', dot: '#ea580c', icon: '⚑', cardClass: 'card-flagged' },
+};
+
+const LPC_PALETTE = [
+  '#000000','#0a0a0a','#1a1a2e','#16213e','#0f3460',
+  '#2d1b69','#533483','#6b2d8b','#9c27b0','#e040fb',
+  '#1a0a00','#2a1500','#3d1c02','#5c2800','#8b4513',
+  '#a0522d','#c17817','#d4a017','#e8c037','#f5d78e',
+  '#f5cfa0','#e8b88a','#c68642','#8b5e3c','#4a2c0a',
+  '#006400','#228b22','#4a7c59','#6aaf6e','#90ee90',
+  '#adff2f','#556b2f','#8b7355','#a08060','#c8b88a',
+  '#4169e1','#1e90ff','#6495ed','#87ceeb','#00ced1',
+  '#2e8b57','#3cb371','#808080','#606060','#a0a0a0',
+  '#c0c0c0','#d0d0d0','#e8e8e8','#f0f0f0','#ffffff',
+  '#ff0000','#ff4444','#ff6644','#ff8844','#ffaa44',
+  '#ffcc44','#ffe044','#ff69b4','#c71585','#8b008b',
+  '#4e342e','#6d4c41','#795548','#bcaaa4','#d7ccc8',
+  '#263238','#37474f','#546e7a','#78909c','#b0bec5',
+];
+
+const TAXONOMY = [
+  { id: 'all', label: 'All Assets', icon: '◈', children: [] },
+  { id: 'characters', label: 'Characters', icon: '👤', children: [
+    { id: 'char_player', label: 'Player (Life Stages)' },
+    { id: 'char_npc',    label: 'NPCs' },
+  ]},
+  { id: 'indoor_early', label: 'Indoor — Early Life', icon: '🏠', children: [
+    { id: 'nursery',         label: 'Nursery' },
+    { id: 'living_room',     label: 'Living Room' },
+    { id: 'kitchen',         label: 'Kitchen' },
+    { id: 'bathroom',        label: 'Bathroom' },
+    { id: 'parents_bedroom', label: "Parents' Bedroom" },
+    { id: 'child_bedroom',   label: 'Child Bedroom' },
+    { id: 'teen_bedroom',    label: 'Teen Bedroom' },
+    { id: 'basement',        label: 'Basement' },
+    { id: 'attic',           label: 'Attic' },
+  ]},
+  { id: 'indoor_school', label: 'Indoor — School', icon: '🏫', children: [
+    { id: 'classroom',       label: 'Classroom' },
+    { id: 'school_hallway',  label: 'Hallway' },
+    { id: 'school_cafeteria',label: 'Cafeteria' },
+    { id: 'school_gym',      label: 'Gym' },
+    { id: 'school_library',  label: 'Library' },
+  ]},
+  { id: 'indoor_work', label: 'Indoor — Work', icon: '💼', children: [
+    { id: 'office',      label: 'Office' },
+    { id: 'warehouse',   label: 'Warehouse' },
+    { id: 'construction',label: 'Construction Site' },
+    { id: 'auto_repair', label: 'Auto Repair Shop' },
+    { id: 'factory',     label: 'Factory' },
+    { id: 'restaurant',  label: 'Restaurant' },
+    { id: 'trucking',    label: 'Trucking' },
+    { id: 'retail',      label: 'Retail / Grocery' },
+    { id: 'landscaping', label: 'Landscaping' },
+    { id: 'janitorial',  label: 'Janitorial' },
+  ]},
+  { id: 'indoor_medical', label: 'Indoor — Medical', icon: '🏥', children: [
+    { id: 'hospital_room',  label: 'Hospital Room' },
+    { id: 'doctors_office', label: "Doctor's Office" },
+  ]},
+  { id: 'indoor_late', label: 'Indoor — Late Life', icon: '🌅', children: [
+    { id: 'nursing_home', label: 'Nursing Home' },
+  ]},
+  { id: 'outdoor', label: 'Outdoor', icon: '🌳', children: [
+    { id: 'residential_outdoor', label: 'Residential' },
+    { id: 'playground',          label: 'Playground' },
+    { id: 'city_park',           label: 'City Park' },
+    { id: 'sports_fields',       label: 'Sports Fields' },
+    { id: 'urban_street',        label: 'Urban / Street' },
+    { id: 'beach',               label: 'Beach' },
+    { id: 'nature',              label: 'Nature' },
+    { id: 'special',             label: 'Special / Transitional' },
+  ]},
+  { id: 'vehicles', label: 'Vehicles', icon: '🚗', children: [
+    { id: 'vehicle_car',      label: 'Car Interior' },
+    { id: 'vehicle_bus',      label: 'School Bus' },
+    { id: 'vehicle_bigrig',   label: 'Big Rig Cab' },
+    { id: 'vehicle_airplane', label: 'Airplane Cabin' },
+    { id: 'vehicle_subway',   label: 'Subway Car' },
+    { id: 'vehicle_bicycle',  label: 'Bicycle' },
+  ]},
+  { id: 'gaps', label: 'Needs Generation', icon: '⚠', children: [] },
+];
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+
+const getLPCUrl = (lpcPath) => {
+  if (!lpcPath) return null;
+  const encoded = lpcPath.split('/').map(p => encodeURIComponent(p)).join('/');
+  return LPC_BASE + encoded;
+};
+
+const loadStorage = (key, fallback) => {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
+};
+const saveStorage = (key, val) => {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+};
+
+const formatTime = (iso) => {
+  const d = new Date(iso);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+// ═══════════════════════════════════════════════════════════
+// PIXEL EDITOR
+// ═══════════════════════════════════════════════════════════
+
+function PixelEditor({ asset, editedUrl, onSave, onClose }) {
+  const canvasRef = useRef(null);
+  const [zoom, setZoom] = useState(8);
+  const [tool, setTool] = useState('pencil');
+  const [color, setColor] = useState('#ffffff');
+  const [imgWidth, setImgWidth] = useState(0);
+  const [imgHeight, setImgHeight] = useState(0);
+  const [pixelData, setPixelData] = useState(null);
+  const [undoStack, setUndoStack] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const isDrawing = useRef(false);
+
+  const url = editedUrl || getLPCUrl(asset.lpcPath);
+
+  useEffect(() => {
+    if (!url) { setError(true); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const oc = document.createElement('canvas');
+      oc.width = img.width; oc.height = img.height;
+      const ctx = oc.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const id = ctx.getImageData(0, 0, img.width, img.height);
+      setPixelData(new Uint8ClampedArray(id.data));
+      setImgWidth(img.width); setImgHeight(img.height);
+      setLoaded(true);
+    };
+    img.onerror = () => setError(true);
+    img.src = url;
+  }, [url]);
+
+  const renderCanvas = useCallback(() => {
+    if (!canvasRef.current || !pixelData || !imgWidth) return;
+    const canvas = canvasRef.current;
+    canvas.width = imgWidth * zoom;
+    canvas.height = imgHeight * zoom;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    // Draw via offscreen
+    const oc = document.createElement('canvas');
+    oc.width = imgWidth; oc.height = imgHeight;
+    const octx = oc.getContext('2d');
+    const id = new ImageData(new Uint8ClampedArray(pixelData), imgWidth, imgHeight);
+    octx.putImageData(id, 0, 0);
+    ctx.drawImage(oc, 0, 0, imgWidth * zoom, imgHeight * zoom);
+    // Grid
+    if (zoom >= 4) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x <= imgWidth; x++) {
+        ctx.beginPath(); ctx.moveTo(x*zoom, 0); ctx.lineTo(x*zoom, imgHeight*zoom); ctx.stroke();
+      }
+      for (let y = 0; y <= imgHeight; y++) {
+        ctx.beginPath(); ctx.moveTo(0, y*zoom); ctx.lineTo(imgWidth*zoom, y*zoom); ctx.stroke();
+      }
+    }
+  }, [pixelData, zoom, imgWidth, imgHeight]);
+
+  useEffect(() => { renderCanvas(); }, [renderCanvas]);
+
+  const getPixelXY = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(imgWidth-1,  Math.floor((e.clientX - rect.left)  / zoom))),
+      y: Math.max(0, Math.min(imgHeight-1, Math.floor((e.clientY - rect.top)   / zoom))),
+    };
+  };
+
+  const paintAt = (x, y) => {
+    const d = new Uint8ClampedArray(pixelData);
+    const i = (y * imgWidth + x) * 4;
+    if (tool === 'eraser') {
+      d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=0;
+    } else if (tool === 'eyedropper') {
+      const r=pixelData[i], g=pixelData[i+1], b=pixelData[i+2];
+      setColor('#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''));
+      return;
+    } else {
+      const r=parseInt(color.slice(1,3),16), g=parseInt(color.slice(3,5),16), b=parseInt(color.slice(5,7),16);
+      d[i]=r; d[i+1]=g; d[i+2]=b; d[i+3]=255;
+    }
+    setPixelData(d);
+  };
+
+  const onMouseDown = (e) => {
+    isDrawing.current = true;
+    setUndoStack(s => [...s.slice(-29), pixelData]);
+    const { x, y } = getPixelXY(e);
+    paintAt(x, y);
+  };
+  const onMouseMove = (e) => {
+    if (!isDrawing.current) return;
+    const { x, y } = getPixelXY(e);
+    paintAt(x, y);
+  };
+  const onMouseUp   = () => { isDrawing.current = false; };
+
+  const undo = () => {
+    if (!undoStack.length) return;
+    setPixelData(undoStack[undoStack.length-1]);
+    setUndoStack(s => s.slice(0,-1));
+  };
+
+  const reset = () => {
+    if (!undoStack.length) return;
+    setPixelData(undoStack[0]);
+    setUndoStack([]);
+  };
+
+  const saveEdit = () => {
+    const oc = document.createElement('canvas');
+    oc.width = imgWidth; oc.height = imgHeight;
+    const ctx = oc.getContext('2d');
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(pixelData), imgWidth, imgHeight), 0, 0);
+    const dataUrl = oc.toDataURL('image/png');
+    onSave(asset.id, dataUrl);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${asset.id}_edited.png`;
+    a.click();
+  };
+
+  const cursorClass = tool === 'pencil' ? 'pixel-cursor' : tool === 'eraser' ? 'eraser-cursor' : 'eyedrop-cursor';
+
+  return (
+    <div style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center'}} onClick={e => { if(e.target===e.currentTarget) onClose(); }}>
+      <div className="fade-in" style={{background:'#1e293b',border:'1px solid #334155',borderRadius:12,width:'min(92vw,1100px)',height:'min(88vh,760px)',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        {/* Header */}
+        <div style={{display:'flex',alignItems:'center',padding:'10px 16px',borderBottom:'1px solid #334155',gap:8,flexShrink:0}}>
+          <span style={{fontSize:16,fontWeight:600,color:'#e2e8f0',flex:1}}>✏️ Pixel Editor — {asset.name}</span>
+          <button onClick={onClose} style={{color:'#64748b',fontSize:18,lineHeight:1,background:'none',border:'none',cursor:'pointer',padding:'2px 6px'}} title="Close">✕</button>
+        </div>
+
+        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
+          {/* Toolbar */}
+          <div style={{width:56,background:'#0f172a',borderRight:'1px solid #334155',display:'flex',flexDirection:'column',alignItems:'center',padding:'12px 0',gap:6,flexShrink:0}}>
+            {[['pencil','✏','Pencil'],['eraser','⌫','Eraser'],['eyedropper','🎨','Eyedropper']].map(([t,ic,lbl]) => (
+              <button key={t} onClick={()=>setTool(t)} title={lbl}
+                style={{width:36,height:36,borderRadius:6,fontSize:16,background:tool===t?'#3730a3':'transparent',border:tool===t?'1px solid #6366f1':'1px solid transparent',cursor:'pointer',color:tool===t?'#a5b4fc':'#64748b'}}>
+                {ic}
+              </button>
+            ))}
+            <div style={{width:28,height:1,background:'#334155',margin:'4px 0'}}/>
+            {[4,8,16,32].map(z => (
+              <button key={z} onClick={()=>setZoom(z)} title={`${z}x zoom`}
+                style={{width:36,height:20,borderRadius:4,fontSize:10,background:zoom===z?'#1e3a5f':'transparent',border:zoom===z?'1px solid #3b82f6':'1px solid transparent',cursor:'pointer',color:zoom===z?'#93c5fd':'#64748b'}}>
+                {z}x
+              </button>
+            ))}
+          </div>
+
+          {/* Canvas area */}
+          <div className="editor-canvas-wrap" style={{flex:1,position:'relative'}}>
+            {!loaded && !error && (
+              <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',color:'#64748b'}}>Loading sprite…</div>
+            )}
+            {error && (
+              <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:8,color:'#ef4444'}}>
+                <span style={{fontSize:32}}>⚠</span>
+                <span>Cannot load sprite — check CORS or URL</span>
+              </div>
+            )}
+            {loaded && (
+              <div style={{padding:16}}>
+                <canvas
+                  ref={canvasRef}
+                  className={`checkerboard ${cursorClass}`}
+                  style={{borderRadius:4,display:'block'}}
+                  onMouseDown={onMouseDown}
+                  onMouseMove={onMouseMove}
+                  onMouseUp={onMouseUp}
+                  onMouseLeave={onMouseUp}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right panel: palette + actions */}
+          <div style={{width:180,background:'#0f172a',borderLeft:'1px solid #334155',display:'flex',flexDirection:'column',padding:12,gap:12,flexShrink:0,overflow:'auto'}}>
+            {/* Active color */}
+            <div>
+              <div style={{fontSize:11,color:'#64748b',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Active Color</div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:32,height:32,borderRadius:4,background:color,border:'2px solid #475569'}}/>
+                <input type="color" value={color} onChange={e=>setColor(e.target.value)}
+                  style={{width:40,height:32,border:'none',background:'none',cursor:'pointer',padding:0}}/>
+              </div>
+            </div>
+
+            {/* Palette */}
+            <div>
+              <div style={{fontSize:11,color:'#64748b',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>LPC Palette</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:2}}>
+                {LPC_PALETTE.map(c => (
+                  <div key={c} onClick={()=>setColor(c)}
+                    style={{width:16,height:16,background:c,borderRadius:2,cursor:'pointer',border:color===c?'2px solid #a5b4fc':'1px solid rgba(255,255,255,0.1)',flexShrink:0}}
+                    title={c}/>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            {loaded && (
+              <div>
+                <div style={{fontSize:11,color:'#64748b',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Preview (1x)</div>
+                <div className="checkerboard" style={{borderRadius:4,padding:4,display:'inline-block'}}>
+                  <canvas ref={el => {
+                    if (!el || !pixelData || !imgWidth) return;
+                    el.width = imgWidth; el.height = imgHeight;
+                    const ctx = el.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.putImageData(new ImageData(new Uint8ClampedArray(pixelData), imgWidth, imgHeight), 0, 0);
+                  }} className="pixel-art" style={{display:'block',maxWidth:148}}/>
+                </div>
+              </div>
+            )}
+
+            {/* Undo info */}
+            <div style={{fontSize:11,color:'#475569'}}>Undo stack: {undoStack.length}/30</div>
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div style={{display:'flex',gap:8,padding:'10px 16px',borderTop:'1px solid #334155',flexShrink:0}}>
+          <button onClick={undo} disabled={!undoStack.length}
+            style={{padding:'6px 14px',borderRadius:6,background:'#334155',border:'none',color:undoStack.length?'#e2e8f0':'#475569',cursor:undoStack.length?'pointer':'not-allowed',fontSize:13}}>
+            ↩ Undo
+          </button>
+          <button onClick={reset} disabled={!undoStack.length}
+            style={{padding:'6px 14px',borderRadius:6,background:'#334155',border:'none',color:undoStack.length?'#e2e8f0':'#475569',cursor:undoStack.length?'pointer':'not-allowed',fontSize:13}}>
+            Reset
+          </button>
+          <div style={{flex:1}}/>
+          <button onClick={onClose}
+            style={{padding:'6px 14px',borderRadius:6,background:'transparent',border:'1px solid #475569',color:'#94a3b8',cursor:'pointer',fontSize:13}}>
+            Cancel
+          </button>
+          <button onClick={saveEdit} disabled={!loaded}
+            style={{padding:'6px 16px',borderRadius:6,background:loaded?'#4f46e5':'#334155',border:'none',color:'#e2e8f0',cursor:loaded?'pointer':'not-allowed',fontSize:13,fontWeight:600}}>
+            💾 Save Edit + Download
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// LIGHTBOX MODAL
+// ═══════════════════════════════════════════════════════════
+
+function LightboxModal({ asset, state, visibleAssets, onAction, onDecide, onEdit, onClose }) {
+  const [note,     setNote]     = useState(state.notes || '');
+  const [loadedId, setLoadedId] = useState(null);   // id of asset whose img has loaded
+  const [errorId,  setErrorId]  = useState(null);   // id of asset whose img errored
+  const [zoom,     setZoom]     = useState(1);
+  const [natW,     setNatW]     = useState(0);
+  const [natH,     setNatH]     = useState(0);
+  const [flash,    setFlash]    = useState(null);
+  const imgRef = useRef(null);
+
+  // Derived immediately from current asset.id — no effect needed, no race condition
+  const imgLoaded = loadedId === asset.id;
+  const imgError  = errorId  === asset.id;
+
+  const url    = state.editedUrl || getLPCUrl(asset.lpcPath);
+  const status = state.status || 'pending';
+
+  const currentIdx = visibleAssets.findIndex(a => a.id === asset.id);
+  const total      = visibleAssets.length;
+
+  // Reset note and zoom when asset changes (not imgLoaded — that's derived now)
+  useEffect(() => {
+    setNote(state.notes || '');
+    setZoom(1);
+  }, [asset.id]);
+
+  useEffect(() => { setNote(state.notes || ''); }, [state.notes]);
+
+  const handleImgLoad = (e) => {
+    setNatW(e.target.naturalWidth);
+    setNatH(e.target.naturalHeight);
+    setLoadedId(asset.id);  // imgLoaded becomes true for THIS asset only
+  };
+
+  const navigate = useCallback((dir) => {
+    const next = visibleAssets[currentIdx + dir];
+    if (next) onAction('__navigate__', next.id);
+  }, [currentIdx, visibleAssets, onAction]);
+
+  // decide: Lightbox only owns the flash visual; App owns navigation via onDecide
+  const decide = useCallback((action) => {
+    setFlash(action);
+    onDecide(asset.id, action, note);        // App handles decision + navigation
+    setTimeout(() => setFlash(null), 280);   // clear flash after animation
+  }, [asset.id, note, onDecide]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const tag = e.target.tagName;
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': navigate(1);  break;
+        case 'ArrowLeft':  case 'ArrowUp':   navigate(-1); break;
+        case 'Escape':                       onClose();    break;
+        case 'a': case 'A': decide('approved'); break;
+        case 'r': case 'R': decide('rejected'); break;
+        case 'm': case 'M': decide('maybe');    break;
+        case 'f': case 'F': decide('flagged');  break;
+        case '+': case '=': setZoom(z => Math.min(z * 2, 16)); break;
+        case '-':           setZoom(z => Math.max(z / 2, 0.5)); break;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigate, decide, onClose]);
+
+  const flashBg = flash ? STATUS[flash].dot : 'transparent';
+
+  const displayW = natW ? natW * zoom : null;
+  const displayH = natH ? natH * zoom : null;
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{position:'fixed',inset:0,zIndex:500,background:'rgba(2,6,23,0.97)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+
+      {/* Flash overlay */}
+      <div style={{position:'fixed',inset:0,background:flashBg,opacity:flash?0.2:0,pointerEvents:'none',transition:'opacity 0.3s',zIndex:501}}/>
+
+      <div className="fade-in" style={{
+        width:'96vw', height:'94vh',
+        background:'#0d1729',
+        border:'1px solid #1e293b',
+        borderRadius:14,
+        display:'flex',
+        flexDirection:'column',
+        overflow:'hidden',
+        position:'relative',
+        zIndex:502,
+      }}>
+
+        {/* ── HEADER ── */}
+        <div style={{display:'flex',alignItems:'center',padding:'9px 16px',borderBottom:'1px solid #1e293b',gap:10,flexShrink:0,background:'#0a1120'}}>
+          <span className={`${STATUS[status].bg} ${STATUS[status].text}`}
+            style={{padding:'2px 10px',borderRadius:20,fontSize:11,fontWeight:700,flexShrink:0}}>
+            {STATUS[status].icon} {STATUS[status].label}
+          </span>
+          <span style={{fontWeight:700,fontSize:16,color:'#e2e8f0',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+            {asset.name}
+          </span>
+          {state.editedUrl && (
+            <span style={{fontSize:10,color:'#a3e635',background:'rgba(163,230,53,0.1)',padding:'2px 8px',borderRadius:4,flexShrink:0}}>✦ edited</span>
+          )}
+          <span style={{fontSize:12,color:'#475569',flexShrink:0}}>{currentIdx + 1} / {total}</span>
+          <button onClick={onClose}
+            style={{color:'#475569',fontSize:20,background:'none',border:'none',cursor:'pointer',padding:'2px 8px',flexShrink:0,lineHeight:1}}
+            title="Close (Esc)">✕</button>
+        </div>
+
+        {/* ── BODY ── */}
+        <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+
+          {/* ── LEFT ARROW ── */}
+          <button onClick={() => navigate(-1)} disabled={currentIdx === 0}
+            style={{width:50,background:'transparent',border:'none',
+                    cursor:currentIdx>0?'pointer':'default',
+                    color:currentIdx>0?'#64748b':'#1e293b',
+                    fontSize:36,flexShrink:0,transition:'color 0.15s',
+                    display:'flex',alignItems:'center',justifyContent:'center'}}
+            title="Previous (←)">‹</button>
+
+          {/* ── IMAGE AREA (dominant, scrollable) ── */}
+          <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',borderRight:'1px solid #1e293b'}}>
+
+            {/* Scrollable sprite canvas */}
+            <div className="checkerboard" style={{
+              flex:1,
+              overflow:'auto',
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'center',
+              padding:24,
+            }}>
+              {url ? (
+                <>
+                  {!imgLoaded && !imgError && (
+                    <div style={{color:'#334155',fontSize:14}}>Loading…</div>
+                  )}
+                  {imgError && (
+                    <div style={{textAlign:'center',color:'#ef4444',fontSize:13}}>
+                      <div style={{fontSize:32,marginBottom:8}}>⚠</div>
+                      <div>Failed to load sprite</div>
+                      <div style={{fontSize:10,color:'#475569',marginTop:6,maxWidth:300,wordBreak:'break-all'}}>{url}</div>
+                    </div>
+                  )}
+                  <img
+                    ref={imgRef}
+                    src={url}
+                    alt={asset.name}
+                    className="pixel-art"
+                    style={{
+                      width:  displayW || 'auto',
+                      height: displayH || 'auto',
+                      maxWidth:  zoom <= 1 ? '100%' : 'none',
+                      maxHeight: zoom <= 1 ? '100%' : 'none',
+                      display: imgLoaded ? 'block' : 'none',
+                      imageRendering: 'pixelated',
+                    }}
+                    onLoad={handleImgLoad}
+                    onError={() => setErrorId(asset.id)}
+                  />
+                </>
+              ) : (
+                <div style={{textAlign:'center',color:'#475569',padding:32}}>
+                  <div style={{fontSize:48,marginBottom:12}}>⚠</div>
+                  <div style={{fontSize:15,fontWeight:600,marginBottom:6}}>No sprite available</div>
+                  <div style={{fontSize:12,color:'#334155'}}>Needs generation or sourcing</div>
+                </div>
+              )}
+            </div>
+
+            {/* Zoom controls */}
+            <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderTop:'1px solid #1e293b',background:'#0a1120',flexShrink:0}}>
+              <span style={{fontSize:11,color:'#475569'}}>Zoom</span>
+              {[0.5,1,2,4,8].map(z => (
+                <button key={z} onClick={() => setZoom(z)}
+                  style={{padding:'3px 10px',borderRadius:4,fontSize:12,
+                          background:zoom===z?'#1e3a5f':'transparent',
+                          border:zoom===z?'1px solid #3b82f6':'1px solid #334155',
+                          color:zoom===z?'#93c5fd':'#64748b',cursor:'pointer'}}>
+                  {z < 1 ? `${z*100}%` : `${z}x`}
+                </button>
+              ))}
+              {imgLoaded && natW > 0 && (
+                <span style={{fontSize:10,color:'#334155',marginLeft:8}}>
+                  {natW} × {natH} px {zoom !== 1 && `→ ${Math.round(natW*zoom)} × ${Math.round(natH*zoom)}`}
+                </span>
+              )}
+              <div style={{flex:1}}/>
+              <span style={{fontSize:10,color:'#334155'}}>+ / − to zoom</span>
+            </div>
+          </div>
+
+          {/* ── RIGHT METADATA PANEL ── */}
+          <div style={{width:280,flexShrink:0,display:'flex',flexDirection:'column',overflow:'auto',padding:'16px 16px 8px',gap:14}}>
+
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <span style={{fontSize:11,color:'#475569',width:54,flexShrink:0}}>Source</span>
+                <span style={{fontSize:12,fontWeight:600,
+                  color:asset.source==='lpc'?'#34d399':asset.source==='gap'?'#f87171':'#93c5fd'}}>
+                  {asset.source === 'lpc' ? '✓ LPC (CC-BY 4.0)' : asset.source === 'gap' ? '⚠ Needs Generation' : asset.source}
+                </span>
+              </div>
+              {asset.lpcPath && (
+                <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+                  <span style={{fontSize:11,color:'#475569',width:54,flexShrink:0}}>Path</span>
+                  <span style={{fontSize:10,color:'#475569',fontFamily:'monospace',wordBreak:'break-all',lineHeight:1.5}}>{asset.lpcPath}</span>
+                </div>
+              )}
+            </div>
+
+            {asset.notes && (
+              <div style={{background:'rgba(99,102,241,0.07)',border:'1px solid rgba(99,102,241,0.15)',borderRadius:6,padding:'7px 10px',fontSize:12,color:'#a5b4fc',lineHeight:1.5}}>
+                ℹ {asset.notes}
+              </div>
+            )}
+
+            {asset.tags?.length > 0 && (
+              <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
+                {asset.tags.map(t => <span key={t} className="tag">{t}</span>)}
+              </div>
+            )}
+
+            <div>
+              <div style={{fontSize:10,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>Your Notes</div>
+              <textarea value={note} onChange={e => setNote(e.target.value)}
+                placeholder="Notes on this asset…"
+                style={{width:'100%',height:90,background:'#1e293b',border:'1px solid #334155',borderRadius:6,
+                        padding:'7px 9px',color:'#e2e8f0',fontSize:12,resize:'vertical',fontFamily:'inherit',outline:'none'}}
+              />
+            </div>
+
+            {url && (
+              <button onClick={() => onEdit(asset)}
+                style={{width:'100%',padding:'8px',borderRadius:6,background:'rgba(99,102,241,0.08)',
+                        border:'1px solid rgba(99,102,241,0.25)',color:'#a5b4fc',cursor:'pointer',fontSize:12,fontWeight:500}}>
+                ✏️ Pixel Editor
+              </button>
+            )}
+
+            <div style={{marginTop:'auto',paddingTop:10,borderTop:'1px solid #1e293b',fontSize:10,color:'#334155',lineHeight:2}}>
+              A Approve &nbsp;·&nbsp; R Reject &nbsp;·&nbsp; M Maybe &nbsp;·&nbsp; F Flag<br/>
+              ← → Navigate &nbsp;·&nbsp; + − Zoom &nbsp;·&nbsp; Esc Close
+            </div>
+          </div>
+
+          {/* ── RIGHT ARROW ── */}
+          <button onClick={() => navigate(1)} disabled={currentIdx === total - 1}
+            style={{width:50,background:'transparent',border:'none',
+                    cursor:currentIdx<total-1?'pointer':'default',
+                    color:currentIdx<total-1?'#64748b':'#1e293b',
+                    fontSize:36,flexShrink:0,transition:'color 0.15s',
+                    display:'flex',alignItems:'center',justifyContent:'center'}}
+            title="Next (→)">›</button>
+
+        </div>{/* end body */}
+
+        {/* ── DECISION BUTTONS ── */}
+        <div style={{display:'flex',gap:10,padding:'12px 20px',borderTop:'1px solid #1e293b',flexShrink:0,background:'#0a1120'}}>
+          {[
+            ['approved', '✓  Approve', '#16a34a', 'rgba(22,163,74,0.12)'],
+            ['rejected', '✗  Reject',  '#dc2626', 'rgba(220,38,38,0.12)'],
+            ['maybe',    '?  Maybe',   '#ca8a04', 'rgba(202,138,4,0.12)'],
+            ['flagged',  '⚑  Flag',   '#ea580c', 'rgba(234,88,12,0.12)'],
+          ].map(([k, label, clr, bg]) => (
+            <button key={k} onClick={() => decide(k)}
+              style={{
+                flex:1, padding:'12px 8px', borderRadius:8,
+                background: status === k ? bg : 'transparent',
+                border: `1.5px solid ${status === k ? clr : '#1e293b'}`,
+                color: status === k ? clr : '#475569',
+                cursor: 'pointer', fontSize: 15, fontWeight: status === k ? 700 : 400,
+                transition: 'all 0.12s', letterSpacing: '0.01em',
+              }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+      </div>{/* end modal card */}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// ASSET CARD
+// ═══════════════════════════════════════════════════════════
+
+function AssetCard({ asset, state, onSelect, onAction }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const url = state.editedUrl || getLPCUrl(asset.lpcPath);
+  const status = state.status || 'pending';
+  const s = STATUS[status];
+
+  return (
+    <div
+      className={`card-hover ${s.cardClass}`}
+      onClick={() => onSelect(asset)}
+      style={{background:'#1e293b',border:'1px solid #334155',borderRadius:8,cursor:'pointer',position:'relative',overflow:'hidden',transition:'all 0.15s',display:'flex',flexDirection:'column',width:160,flexShrink:0}}>
+
+      {/* Status dot */}
+      <div style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:'50%',background:s.dot,boxShadow:`0 0 6px ${s.dot}`,zIndex:2}}/>
+
+      {/* Edit badge */}
+      {state.editedUrl && (
+        <div style={{position:'absolute',top:6,left:6,fontSize:8,color:'#a3e635',background:'rgba(0,0,0,0.7)',borderRadius:3,padding:'1px 4px',zIndex:2}}>edited</div>
+      )}
+
+      {/* Image area */}
+      <div className="checkerboard" style={{height:130,display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+        {url ? (
+          <>
+            {!imgLoaded && !imgError && <div style={{color:'#475569',fontSize:10}}>⋯</div>}
+            {imgError && <div style={{color:'#ef4444',fontSize:10,textAlign:'center'}}>⚠ load failed</div>}
+            <img src={url} alt={asset.name} className="pixel-art"
+              style={{maxWidth:'100%',maxHeight:'100%',display:imgLoaded?'block':'none',imageRendering:'pixelated'}}
+              onLoad={()=>setImgLoaded(true)}
+              onError={()=>setImgError(true)}
+            />
+          </>
+        ) : (
+          <div style={{textAlign:'center',color:'#475569',fontSize:11,padding:8}}>
+            <div style={{fontSize:20,marginBottom:2}}>⚠</div>
+            <div>Needs generation</div>
+          </div>
+        )}
+      </div>
+
+      {/* Name + source */}
+      <div style={{padding:'7px 8px',flex:1}}>
+        <div style={{fontSize:11,fontWeight:500,color:'#e2e8f0',lineHeight:1.3,marginBottom:4}}>{asset.name}</div>
+        <div style={{fontSize:10,color:asset.source==='lpc'?'#34d399':asset.source==='gap'?'#f87171':'#93c5fd'}}>
+          {asset.source === 'lpc' ? 'LPC' : asset.source === 'gap' ? '⚠ Gap' : asset.source}
+        </div>
+      </div>
+
+      {/* Quick actions on hover */}
+      <div style={{display:'flex',borderTop:'1px solid #1e293b'}}>
+        {[['approved','✓','#16a34a'],['rejected','✗','#dc2626'],['maybe','?','#ca8a04']].map(([k,ic,clr]) => (
+          <button key={k}
+            onClick={e => { e.stopPropagation(); onAction(asset.id, k, state.notes||''); }}
+            style={{flex:1,padding:'5px 2px',background:'transparent',border:'none',cursor:'pointer',color:status===k?clr:'#475569',fontSize:14,transition:'color 0.1s',fontWeight:600}}
+            title={STATUS[k].label}>
+            {ic}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// HISTORY PANEL
+// ═══════════════════════════════════════════════════════════
+
+function HistoryPanel({ history, isOpen, onToggle }) {
+  return (
+    <div style={{borderTop:'1px solid #334155',background:'#0f172a',flexShrink:0,transition:'height 0.2s',height:isOpen?220:36,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+      <div onClick={onToggle}
+        style={{display:'flex',alignItems:'center',padding:'0 16px',height:36,cursor:'pointer',userSelect:'none',flexShrink:0,borderBottom:isOpen?'1px solid #334155':'none'}}>
+        <span style={{fontSize:12,color:'#64748b',fontWeight:500}}>📋 Decision History</span>
+        <span style={{marginLeft:8,fontSize:11,color:'#475569'}}>({history.length} entries)</span>
+        <div style={{flex:1}}/>
+        <span style={{color:'#475569',fontSize:12}}>{isOpen?'▼':'▲'}</span>
+      </div>
+      {isOpen && (
+        <div style={{flex:1,overflow:'auto',padding:'8px 16px',display:'flex',flexDirection:'column',gap:4}}>
+          {history.length === 0 ? (
+            <div style={{color:'#475569',fontSize:12,textAlign:'center',marginTop:16}}>No decisions yet</div>
+          ) : [...history].reverse().map((h,i) => (
+            <div key={i} style={{display:'flex',gap:8,alignItems:'center',padding:'4px 8px',background:'#1e293b',borderRadius:6,fontSize:12}}>
+              <span className={`${STATUS[h.action]?.bg} ${STATUS[h.action]?.text}`} style={{padding:'1px 7px',borderRadius:12,fontSize:10,fontWeight:600,flexShrink:0}}>
+                {STATUS[h.action]?.icon} {STATUS[h.action]?.label}
+              </span>
+              <span style={{color:'#e2e8f0',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h.assetName}</span>
+              {h.notes && <span style={{color:'#64748b',maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={h.notes}>{h.notes}</span>}
+              <span style={{color:'#475569',fontSize:10,flexShrink:0}}>{formatTime(h.timestamp)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════
+
+function Sidebar({ activeCategory, onSelect, decisions, assets, collapsed, setCollapsed }) {
+  const getStats = (catId) => {
+    let all;
+    if (catId === 'all') all = assets;
+    else if (catId === 'gaps') all = assets.filter(a => a.source === 'gap');
+    else all = assets.filter(a => a.subcategory === catId);
+    const approved = all.filter(a => (decisions[a.id]?.status||'pending') === 'approved').length;
+    return { total: all.length, approved };
+  };
+
+  const toggleCollapse = (id, e) => {
+    e.stopPropagation();
+    setCollapsed(s => ({ ...s, [id]: !s[id] }));
+  };
+
+  return (
+    <div style={{width:220,background:'#0f172a',borderRight:'1px solid #334155',display:'flex',flexDirection:'column',overflow:'hidden',flexShrink:0}}>
+      <div style={{padding:'10px 12px',borderBottom:'1px solid #334155',fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>
+        Taxonomy
+      </div>
+      <div style={{flex:1,overflow:'auto',padding:'6px 0'}}>
+        {TAXONOMY.map(group => {
+          const gs = getStats(group.id);
+          const isCollapsed = collapsed[group.id];
+          const isActive = activeCategory === group.id;
+          return (
+            <div key={group.id}>
+              <div className={`tree-item ${isActive ? 'active' : ''}`}
+                onClick={() => onSelect(group.id)}
+                style={{display:'flex',alignItems:'center',padding:'5px 10px',cursor:'pointer',gap:6,borderLeft:isActive?'2px solid #6366f1':'2px solid transparent'}}>
+                <span style={{fontSize:13}}>{group.icon||'◦'}</span>
+                <span style={{flex:1,fontSize:13,color:isActive?'#a5b4fc':'#cbd5e1',fontWeight:isActive?600:400,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{group.label}</span>
+                {gs.total > 0 && (
+                  <span style={{fontSize:10,color:gs.approved===gs.total&&gs.total>0?'#4ade80':'#64748b',background:'#1e293b',borderRadius:10,padding:'1px 6px',flexShrink:0}}>
+                    {gs.approved}/{gs.total}
+                  </span>
+                )}
+                {group.children?.length > 0 && (
+                  <span onClick={e=>toggleCollapse(group.id,e)} style={{color:'#475569',fontSize:10,flexShrink:0}}>{isCollapsed?'▶':'▼'}</span>
+                )}
+              </div>
+              {!isCollapsed && group.children?.map(child => {
+                const cs = getStats(child.id);
+                const isCActive = activeCategory === child.id;
+                return (
+                  <div key={child.id} className={`tree-item ${isCActive ? 'active' : ''}`}
+                    onClick={() => onSelect(child.id)}
+                    style={{display:'flex',alignItems:'center',padding:'4px 10px 4px 30px',cursor:'pointer',gap:6,borderLeft:isCActive?'2px solid #6366f1':'2px solid transparent'}}>
+                    <span style={{flex:1,fontSize:12,color:isCActive?'#a5b4fc':'#94a3b8',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{child.label}</span>
+                    {cs.total > 0 && (
+                      <span style={{fontSize:10,color:cs.approved===cs.total&&cs.total>0?'#4ade80':'#64748b',background:'#1e293b',borderRadius:10,padding:'1px 5px',flexShrink:0}}>
+                        {cs.approved}/{cs.total}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════
+
+function App() {
+  const [catalog, setCatalog]           = useState([]);
+  const [decisions, setDecisions]       = useState(() => loadStorage('sprite_decisions', {}));
+  const [history, setHistory]           = useState(() => loadStorage('sprite_history', []));
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [selectedAsset, setSelectedAsset]   = useState(null);
+  const [editingAsset, setEditingAsset]     = useState(null);
+  const [statusFilter, setStatusFilter]     = useState('all');
+  const [search, setSearch]             = useState('');
+  const [historyOpen, setHistoryOpen]   = useState(false);
+  const [collapsed, setCollapsed]       = useState({});
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
+
+  // Load catalog — embedded inline so file:// works, import button can override
+  const EMBEDDED_CATALOG = {"version": "1.0.0", "description": "Life Simulator Asset Review Catalog", "generated": "2026-04-01", "lpcBase": "https://raw.githubusercontent.com/ElizaWy/LPC/main/", "assets": [{"id": "char_body", "name": "Character Body (Base Sheets)", "subcategory": "char_player", "source": "lpc", "lpcPath": "Characters/Body/Body 01 - Feminine, Thin/Walk.png", "notes": "Full LPC Character Generator \u2014 walk cycles in 4 directions, all life stages", "tags": ["characters", "player"], "lpcPathFixed": true, "lpcPathOld": "Characters/Body", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "char_children", "name": "Children Character Sheets", "subcategory": "char_player", "source": "lpc", "lpcPath": "Characters/Children/Body 01 - Child/Walk.png", "notes": "Toddler and child body types with walk cycles", "tags": ["characters", "player", "children"], "lpcPathFixed": true, "lpcPathOld": "Characters/Children", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "char_clothing", "name": "Clothing Overlays", "subcategory": "char_player", "source": "lpc", "lpcPath": "Characters/Clothing/Feminine, Thin/Casual 01/Walk.png", "notes": "Full wardrobe library \u2014 casual, formal, profession uniforms", "tags": ["characters", "player", "npc"], "lpcPathFixed": true, "lpcPathOld": "Characters/Clothing", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "char_hair", "name": "Hair Styles", "subcategory": "char_player", "source": "lpc", "lpcPath": "Characters/Hair/Medium 01 - Page/Walk.png", "tags": ["characters", "player", "npc"], "lpcPathFixed": true, "lpcPathOld": "Characters/Hair", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "char_heads", "name": "Head / Face Sheets", "subcategory": "char_player", "source": "lpc", "lpcPath": "Characters/Head/Head 01/Walk.png", "tags": ["characters", "player", "npc"], "lpcPathFixed": true, "lpcPathOld": "Characters/Head", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "char_head_accessories", "name": "Head Accessories", "subcategory": "char_npc", "source": "lpc", "lpcPath": "Characters/Head Accessories/Hats 01/Walk.png", "notes": "Hats, glasses, etc.", "tags": ["characters", "npc"], "lpcPathFixed": true, "lpcPathOld": "Characters/Head Accessories", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "char_props", "name": "Character Props (held items)", "subcategory": "char_npc", "source": "lpc", "lpcPath": "Characters/Props/Tools/Walk.png", "notes": "Books, tools, weapons held in-hand", "tags": ["characters", "npc", "items"], "lpcPathFixed": true, "lpcPathOld": "Characters/Props", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_sofa_casual", "name": "Sofa, Casual", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Sofa, Casual A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Sofa, Casual (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_sofa_set", "name": "Sofa Set, Casual", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Sofa Set, Casual A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Sofa Set, Casual (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_loveseat_patterned", "name": "Loveseat, Casual Patterned", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Loveseat, Small - Casual Patterned A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Loveseat, Small - Casual Patterned (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_loveseat_solid", "name": "Loveseat, Casual Solid", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Loveseat, Small - Casual Solid A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Loveseat, Small - Casual Solid (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_loveseat_formal", "name": "Loveseat, Formal", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Loveseat, Small - Formal A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Loveseat, Small - Formal (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_chair_sofa_a", "name": "Chair, Sofa A", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Sofa A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_chair_sofa_b", "name": "Chair, Sofa B", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Sofa B.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (B).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_ottoman_long", "name": "Ottoman, Long", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Ottoman, Long A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Ottoman, Long (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_ottoman_medium", "name": "Ottoman, Medium", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Ottoman, Medium A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Ottoman, Medium (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_ottoman_small", "name": "Ottoman, Small", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Ottoman, Small A.png", "tags": ["seating", "living_room"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Ottoman, Small (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_tv", "name": "TV, Widescreen", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/TV (Widescreen).png", "notes": "Includes service/off state variants", "tags": ["living_room", "teen_bedroom", "media", "tech"], "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged during session with imgLoaded race condition bug; path is correct, image likely loads fine now"}, {"id": "lr_fireplace", "name": "Fireplace", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Fireplace.png", "tags": ["living_room", "decor"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_fire_fireplace", "name": "Fireplace Fire (animated)", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Small Items/Fire, Fireplace.png", "notes": "Animated overlay for lit fireplace", "tags": ["living_room", "effects", "fire"], "lpcPathFixed": true, "lpcPathOld": "Objects/Small Items/Fire Fireplace.png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_fireplace_accessories", "name": "Fireplace Accessories", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Small Items/Fireplace, Accessories A.png", "tags": ["living_room", "decor", "props"], "lpcPathFixed": true, "lpcPathOld": "Objects/Small Items/Fireplace Accessories A.png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_floor_lamp", "name": "Floor Lamp", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Lighting (Floor).png", "tags": ["lighting", "living_room", "bedroom"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Floor lamp.png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "lr_shelf", "name": "Bookshelf / Shelf", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Shelf.png", "notes": "Works for living room, bedroom, office, school", "tags": ["storage", "living_room", "bedroom", "office", "school"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_planter", "name": "Houseplant / Planter", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Planter.png", "tags": ["decor", "living_room", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_end_table", "name": "End Table / Side Table", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/End Table.png", "tags": ["furniture", "living_room", "bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_curtains", "name": "Curtains", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Wall Items/Curtains.png", "tags": ["wall", "decor", "window", "living_room", "bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_painting_landscape", "name": "Painting, Landscape", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Wall Items/Paintings, Landscape.png", "tags": ["wall", "decor", "living_room", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_painting_portrait", "name": "Painting, Portraits", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Wall Items/Paintings, Portraits.png", "tags": ["wall", "decor", "living_room", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_painting_still_life", "name": "Painting, Still Life", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Wall Items/Paintings, Still Life.png", "tags": ["wall", "decor", "living_room"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_painting_abstract", "name": "Painting, Abstract", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Wall Items/Paintings, Abstract.png", "tags": ["wall", "decor", "living_room", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_rug_diamond", "name": "Rug, Diamond (tiling)", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Rugs/Diamond Rug, tiling.png", "tags": ["floor", "living_room", "bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_rug_rainbow_check", "name": "Rug, Rainbow Checkered", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Rugs/Rainbow Checkered Rug.png", "tags": ["floor", "living_room", "child_bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_rug_vine", "name": "Rug, Swirling Vine", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Furniture/Rugs/Swirling Vine Rug.png", "tags": ["floor", "living_room"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_games", "name": "Tabletop Games", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Small Items/Games.png", "notes": "Board games, cards", "tags": ["props", "living_room", "child_bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_rotary_phone", "name": "Rotary Phone", "subcategory": "living_room", "source": "lpc", "lpcPath": "Objects/Small Items/Rotary Phones.png", "notes": "Era-specific prop \u2014 early life", "tags": ["props", "living_room", "vintage"], "decision": "approved", "decisionNotes": ""}, {"id": "lr_coffee_table", "name": "Coffee Table", "subcategory": "living_room", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "LPC has rough wood / card tables but no dedicated coffee table", "tags": ["furniture", "living_room"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_fridge", "name": "Refrigerator", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Fridge.png", "notes": "Open and closed states", "tags": ["kitchen", "appliance"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_oven", "name": "Oven / Stove (Modern)", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Oven (Modern).png", "tags": ["kitchen", "appliance"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_sink_counter", "name": "Sink (Countertop)", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Sink (Countertop).png", "tags": ["kitchen", "plumbing"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_cabinet", "name": "Kitchen Cabinet", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Cabinet.png", "notes": "Also works as office filing cabinet", "tags": ["kitchen", "storage", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_countertop", "name": "Countertop", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Countertop.png", "tags": ["kitchen", "surface"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_table_rough", "name": "Dining Table, Rough Wood", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Rough Wood).png", "tags": ["kitchen", "dining", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_table_ornate", "name": "Dining Table, Ornate Wood", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Ornate Wood).png", "tags": ["kitchen", "dining", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_table_card", "name": "Small Table, Card Table", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Card).png", "tags": ["kitchen", "dining", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_chair_dining_a", "name": "Chair, Dining A", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Dining A.png", "tags": ["kitchen", "seating", "dining", "school"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "kitch_chair_dining_b", "name": "Chair, Dining B", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Dining B.png", "tags": ["kitchen", "seating", "dining"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (B).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "kitch_bar_stools", "name": "Bar Stools", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Bar Stools.png", "tags": ["kitchen", "seating"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_coffee_maker", "name": "Coffee Maker", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Small Items/Coffee Maker.png", "tags": ["kitchen", "appliance", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_dishes", "name": "Dishes", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Small Items/Dishes A.png", "tags": ["kitchen", "items", "props"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_clutter", "name": "Kitchen Clutter Props", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Small Items/Kitchen Clutter A.png", "tags": ["kitchen", "items", "props"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_baskets", "name": "Baskets", "subcategory": "kitchen", "source": "lpc", "lpcPath": "Objects/Small Items/Baskets A.png", "tags": ["props", "kitchen", "outdoor"], "decision": "approved", "decisionNotes": ""}, {"id": "kitch_microwave", "name": "Microwave", "subcategory": "kitchen", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["kitchen", "appliance", "tech"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_highchair", "name": "Highchair", "subcategory": "kitchen", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Baby/toddler era only", "tags": ["kitchen", "nursery", "baby", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_toaster", "name": "Toaster", "subcategory": "kitchen", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["kitchen", "appliance"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_fruit_bowl", "name": "Fruit Bowl", "subcategory": "kitchen", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["kitchen", "props", "decor"], "decision": "flagged", "decisionNotes": ""}, {"id": "kitch_dish_rack", "name": "Dish Rack", "subcategory": "kitchen", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["kitchen", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_sink_pedestal", "name": "Sink / Vanity (Pedestal)", "subcategory": "bathroom", "source": "lpc", "lpcPath": "Objects/Furniture/Sink (Pedestal).png", "tags": ["bathroom", "plumbing"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_mirror_wall", "name": "Mirror (Wall-mounted)", "subcategory": "bathroom", "source": "lpc", "lpcPath": "Objects/Wall Items/Mirrors.png", "tags": ["bathroom", "bedroom", "wall"], "decision": "approved", "decisionNotes": ""}, {"id": "bath_mirror_standing", "name": "Mirror (Standing)", "subcategory": "bathroom", "source": "lpc", "lpcPath": "Objects/Furniture/Mirror (Standing).png", "tags": ["bathroom", "bedroom", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_toilet", "name": "Toilet", "subcategory": "bathroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["bathroom", "plumbing"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_bathtub", "name": "Bathtub / Shower", "subcategory": "bathroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["bathroom", "plumbing"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_towel_rack", "name": "Towel Rack", "subcategory": "bathroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["bathroom", "wall"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_medicine_cabinet", "name": "Medicine Cabinet", "subcategory": "bathroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["bathroom", "storage", "wall"], "decision": "flagged", "decisionNotes": ""}, {"id": "bath_rubber_duck", "name": "Rubber Duck", "subcategory": "bathroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Bathtub prop, childhood era", "tags": ["bathroom", "nursery", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "pb_bed_double", "name": "Double Bed", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Double.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_bed_double_b", "name": "Double Bed B", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Double B.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_bed_double_c", "name": "Double Bed C", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Double C.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_bed_double_headboards", "name": "Double Bed Headboards", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Double Headboards.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_bed_double_mattresses", "name": "Double Bed Mattresses", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Double Mattresses.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_dresser", "name": "Dresser", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Dresser.png", "tags": ["bedroom", "storage", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_end_table", "name": "Nightstand / End Table", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/End Table.png", "tags": ["bedroom", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_vanity_desk", "name": "Vanity Desk", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Desk (Vanity).png", "tags": ["bedroom", "furniture", "mirror"], "decision": "flagged", "decisionNotes": ""}, {"id": "pb_bin", "name": "Laundry Hamper / Bin", "subcategory": "parents_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Bin.png", "tags": ["bedroom", "storage"], "decision": "approved", "decisionNotes": ""}, {"id": "pb_wardrobe", "name": "Wardrobe / Closet", "subcategory": "parents_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Double-door wardrobe", "tags": ["bedroom", "storage", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "cb_bed_child", "name": "Child Bed", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Child.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_bed_child_headboards", "name": "Child Bed Headboards", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Child Headboards.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_bed_child_mattresses", "name": "Child Bed Mattresses", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Child Mattresses.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_bed_single_a", "name": "Single Bed A", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Single A.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged during session with imgLoaded race condition bug; path is correct, image likely loads fine now"}, {"id": "cb_bed_single_headboards", "name": "Single Bed Headboards", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Single Headboards.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_shelf", "name": "Bookshelf (Small)", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Shelf.png", "tags": ["storage", "bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_pillows", "name": "Pillows / Stuffed Animals", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Small Items/Pillows.png", "tags": ["bedroom", "props", "decor"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_flowers", "name": "Flowers / Small Plants", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Small Items/Flowers.png", "tags": ["decor", "bedroom", "props"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_chest", "name": "Toy Chest / Storage Chest", "subcategory": "child_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Chest.png", "tags": ["storage", "bedroom", "attic", "toys"], "decision": "approved", "decisionNotes": ""}, {"id": "cb_desk_child", "name": "Desk (Child)", "subcategory": "child_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Small desk, child height, crayons/paper props", "tags": ["bedroom", "furniture", "school"], "decision": "flagged", "decisionNotes": ""}, {"id": "cb_lego", "name": "Lego / Building Blocks", "subcategory": "child_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Floor scatter prop", "tags": ["bedroom", "toys", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "cb_stuffed_animals", "name": "Stuffed Animals", "subcategory": "child_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Floor and bed props", "tags": ["bedroom", "nursery", "toys", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "tb_bed_single_b", "name": "Single Bed B", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Single B.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "approved", "decisionNotes": ""}, {"id": "tb_bed_single_c", "name": "Single Bed C", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Single C.png", "tags": ["bedroom", "sleep", "furniture"], "decision": "rejected", "decisionNotes": ""}, {"id": "tb_desk_office", "name": "Desk (Adult / Teen)", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Desk (Office).png", "tags": ["bedroom", "office", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "tb_chair_office", "name": "Desk Chair (Rolling)", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Office.png", "tags": ["bedroom", "office", "seating"], "decision": "approved", "decisionNotes": ""}, {"id": "tb_laptop", "name": "Laptop", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Small Items/Laptop.png", "tags": ["tech", "bedroom", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "tb_posters", "name": "Posters (Band / Sports / Movie)", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Wall Items/Posters.png", "tags": ["wall", "decor", "teen_bedroom", "school_hallway"], "decision": "approved", "decisionNotes": ""}, {"id": "tb_shelf_tall", "name": "Bookshelf (Tall)", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Shelf.png", "tags": ["storage", "bedroom"], "decision": "approved", "decisionNotes": ""}, {"id": "tb_mirror_standing", "name": "Full-Length Mirror", "subcategory": "teen_bedroom", "source": "lpc", "lpcPath": "Objects/Furniture/Mirror (Standing).png", "tags": ["bedroom", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "tb_gaming_setup", "name": "Gaming Setup", "subcategory": "teen_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Chair + desk arrangement with gaming peripherals", "tags": ["teen_bedroom", "tech"], "decision": "flagged", "decisionNotes": ""}, {"id": "tb_guitar", "name": "Guitar / Instrument", "subcategory": "teen_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Leaning against wall", "tags": ["teen_bedroom", "music", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "tb_weights", "name": "Dumbbell / Weights", "subcategory": "teen_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Floor prop", "tags": ["teen_bedroom", "fitness"], "decision": "flagged", "decisionNotes": ""}, {"id": "tb_clothes_floor", "name": "Clothes on Floor", "subcategory": "teen_bedroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Scatter prop, messy bedroom aesthetic", "tags": ["teen_bedroom", "props", "decor"], "decision": "flagged", "decisionNotes": ""}, {"id": "nur_crib", "name": "Crib", "subcategory": "nursery", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "With and without mobile overhead", "tags": ["nursery", "baby", "sleep"], "decision": "flagged", "decisionNotes": ""}, {"id": "nur_changing_table", "name": "Changing Table", "subcategory": "nursery", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "With diaper supplies on shelf", "tags": ["nursery", "baby", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "nur_rocking_chair", "name": "Rocking Chair", "subcategory": "nursery", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Sofa A.png", "notes": "Standard LPC sofa chair, may need rocking variant edit", "tags": ["nursery", "seating", "baby"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "nur_baby_monitor", "name": "Baby Monitor", "subcategory": "nursery", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["nursery", "baby", "tech"], "decision": "flagged", "decisionNotes": ""}, {"id": "nur_stuffed_animals", "name": "Soft Toys / Stuffed Animals", "subcategory": "nursery", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Floor-placed variants", "tags": ["nursery", "baby", "toys"], "decision": "flagged", "decisionNotes": ""}, {"id": "nur_toy_chest", "name": "Toy Chest", "subcategory": "nursery", "source": "lpc", "lpcPath": "Objects/Furniture/Chest.png", "tags": ["nursery", "storage", "toys"], "decision": "approved", "decisionNotes": ""}, {"id": "nur_night_light", "name": "Night Light", "subcategory": "nursery", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Plugged into wall, soft glow", "tags": ["nursery", "lighting", "baby"], "decision": "flagged", "decisionNotes": ""}, {"id": "bas_workbench", "name": "Workbench (Carpentry)", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Furniture/Workbench (Carpentry).png", "tags": ["workshop", "basement", "construction", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "bas_table_workshop", "name": "Workshop Table", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Workshop).png", "tags": ["workshop", "basement", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "bas_crate", "name": "Storage Crate", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Furniture/Crate.png", "tags": ["storage", "basement", "warehouse"], "decision": "approved", "decisionNotes": ""}, {"id": "bas_barrel", "name": "Storage Barrel", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Furniture/Barrel.png", "tags": ["storage", "basement"], "decision": "approved", "decisionNotes": ""}, {"id": "bas_boxes", "name": "Cardboard Boxes", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Small Items/Boxes.png", "tags": ["storage", "basement", "attic", "warehouse"], "decision": "approved", "decisionNotes": ""}, {"id": "bas_sawhorse", "name": "Sawhorses", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Furniture/Sawhorse.png", "tags": ["workshop", "basement", "construction"], "decision": "approved", "decisionNotes": ""}, {"id": "bas_ladder", "name": "Ladder", "subcategory": "basement", "source": "lpc", "lpcPath": "Objects/Furniture/Ladder.png", "tags": ["basement", "attic", "construction", "structure"], "decision": "approved", "decisionNotes": ""}, {"id": "bas_washer", "name": "Washer", "subcategory": "basement", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["basement", "appliance"], "decision": "flagged", "decisionNotes": ""}, {"id": "bas_dryer", "name": "Dryer", "subcategory": "basement", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["basement", "appliance"], "decision": "flagged", "decisionNotes": ""}, {"id": "bas_ping_pong", "name": "Ping Pong Table", "subcategory": "basement", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["basement", "recreation"], "decision": "flagged", "decisionNotes": ""}, {"id": "att_boxes", "name": "Dusty Boxes (Attic)", "subcategory": "attic", "source": "lpc", "lpcPath": "Objects/Small Items/Boxes.png", "tags": ["attic", "storage"], "decision": "approved", "decisionNotes": ""}, {"id": "att_chest", "name": "Old Trunk / Chest", "subcategory": "attic", "source": "lpc", "lpcPath": "Objects/Furniture/Chest.png", "tags": ["attic", "storage"], "decision": "approved", "decisionNotes": ""}, {"id": "att_ladder", "name": "Ladder", "subcategory": "attic", "source": "lpc", "lpcPath": "Objects/Furniture/Ladder.png", "tags": ["attic", "structure"], "decision": "approved", "decisionNotes": ""}, {"id": "cls_teacher_desk", "name": "Teacher's Desk", "subcategory": "classroom", "source": "lpc", "lpcPath": "Objects/Furniture/Desk (Office).png", "tags": ["classroom", "furniture", "school"], "decision": "flagged", "decisionNotes": ""}, {"id": "cls_student_chair", "name": "Student Chair", "subcategory": "classroom", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Dining A.png", "tags": ["classroom", "seating", "school"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "cls_shelf", "name": "Bookshelf (Classroom)", "subcategory": "classroom", "source": "lpc", "lpcPath": "Objects/Furniture/Shelf.png", "tags": ["classroom", "storage", "school"], "decision": "approved", "decisionNotes": ""}, {"id": "cls_student_desks", "name": "Student Desks (Row)", "subcategory": "classroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Single-seat row arrangement", "tags": ["classroom", "school", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "cls_chalkboard", "name": "Chalkboard / Whiteboard", "subcategory": "classroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Full-width wall tile", "tags": ["classroom", "school", "wall"], "decision": "flagged", "decisionNotes": ""}, {"id": "cls_globe", "name": "Globe", "subcategory": "classroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Desk prop", "tags": ["classroom", "props", "school"], "decision": "flagged", "decisionNotes": ""}, {"id": "cls_clock", "name": "Clock (Wall)", "subcategory": "classroom", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["classroom", "school", "wall", "office"], "decision": "flagged", "decisionNotes": ""}, {"id": "hall_lockers", "name": "Lockers (Row)", "subcategory": "school_hallway", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Open and closed states, tiling", "tags": ["school", "hallway", "storage"], "decision": "flagged", "decisionNotes": ""}, {"id": "hall_bulletin_board", "name": "Bulletin Board (Hallway)", "subcategory": "school_hallway", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["school", "hallway", "wall"], "decision": "flagged", "decisionNotes": ""}, {"id": "hall_trophy_case", "name": "Trophy Case", "subcategory": "school_hallway", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["school", "hallway", "decor"], "decision": "flagged", "decisionNotes": ""}, {"id": "caf_long_table", "name": "Long Cafeteria Table", "subcategory": "school_cafeteria", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Workshop).png", "notes": "Workshop table works as long cafeteria table", "tags": ["school", "cafeteria", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "caf_vending", "name": "Vending Machine", "subcategory": "school_cafeteria", "source": "lpc", "lpcPath": "Objects/Furniture/Vending Machine.png", "tags": ["school", "cafeteria", "office"], "decision": "approved", "decisionNotes": ""}, {"id": "caf_dishes", "name": "Lunch Tray / Dishes", "subcategory": "school_cafeteria", "source": "lpc", "lpcPath": "Objects/Small Items/Dishes A.png", "tags": ["school", "cafeteria", "props"], "decision": "approved", "decisionNotes": ""}, {"id": "caf_service_counter", "name": "Food Service Counter", "subcategory": "school_cafeteria", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "With sneeze guard", "tags": ["school", "cafeteria", "restaurant", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "lib_bookshelf_tall", "name": "Tall Bookshelf (Double-sided)", "subcategory": "school_library", "source": "lpc", "lpcPath": "Objects/Furniture/Shelf.png", "tags": ["school", "library", "storage"], "decision": "approved", "decisionNotes": ""}, {"id": "lib_reading_table", "name": "Reading Table", "subcategory": "school_library", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Ornate Wood).png", "tags": ["school", "library", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "off_desk", "name": "Office Desk", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Desk (Office).png", "tags": ["office", "furniture", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "off_chair", "name": "Office Chair (Rolling)", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Office.png", "tags": ["office", "seating", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "off_cabinet", "name": "Filing Cabinet", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Cabinet.png", "tags": ["office", "storage", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "off_water_cooler", "name": "Water Cooler", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Water Cooler.png", "tags": ["office", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "off_copier", "name": "Printer / Copier", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Copy Machine.png", "tags": ["office", "work", "tech"], "decision": "approved", "decisionNotes": ""}, {"id": "off_vending", "name": "Vending Machine (Office)", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Vending Machine.png", "tags": ["office", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "off_coffee", "name": "Coffee Machine", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Small Items/Coffee Maker.png", "tags": ["office", "kitchen", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "off_laptop", "name": "Laptop", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Small Items/Laptop.png", "tags": ["office", "work", "tech"], "decision": "approved", "decisionNotes": ""}, {"id": "off_loose_paper", "name": "Loose Paper / Documents", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Small Items/Loose Paper.png", "tags": ["office", "props"], "decision": "approved", "decisionNotes": ""}, {"id": "off_shelf", "name": "Bookshelf (Office)", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Shelf.png", "tags": ["office", "storage"], "decision": "approved", "decisionNotes": ""}, {"id": "off_planter", "name": "Office Plant", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Furniture/Planter.png", "tags": ["office", "decor"], "decision": "approved", "decisionNotes": ""}, {"id": "off_motivational_poster", "name": "Motivational Poster", "subcategory": "office", "source": "lpc", "lpcPath": "Objects/Wall Items/Posters.png", "notes": "Posters exist in LPC, ironic office variant", "tags": ["office", "wall", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "off_whiteboard", "name": "Whiteboard on Stand", "subcategory": "office", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["office", "work", "school"], "decision": "flagged", "decisionNotes": ""}, {"id": "off_conference_table", "name": "Conference Table (10-person)", "subcategory": "office", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["office", "work", "furniture"], "decision": "flagged", "decisionNotes": ""}, {"id": "wh_crate", "name": "Wooden Crates / Pallets", "subcategory": "warehouse", "source": "lpc", "lpcPath": "Objects/Furniture/Crate.png", "tags": ["warehouse", "storage", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "wh_boxes", "name": "Cardboard Boxes (Stacked)", "subcategory": "warehouse", "source": "lpc", "lpcPath": "Objects/Small Items/Boxes.png", "tags": ["warehouse", "storage", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "wh_barrel", "name": "Barrels", "subcategory": "warehouse", "source": "lpc", "lpcPath": "Objects/Furniture/Barrel.png", "tags": ["warehouse", "storage", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "wh_pallet_jack", "name": "Pallet Jack", "subcategory": "warehouse", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["warehouse", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "wh_forklift", "name": "Forklift", "subcategory": "warehouse", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["warehouse", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "wh_metal_shelving", "name": "Metal Shelving (Tall)", "subcategory": "warehouse", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Floor-to-ceiling tile", "tags": ["warehouse", "storage", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "wh_conveyor", "name": "Conveyor Belt", "subcategory": "warehouse", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Animated, directional", "tags": ["warehouse", "factory", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "wh_hard_hat", "name": "Hard Hat (Hanging)", "subcategory": "warehouse", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Wall hook prop", "tags": ["warehouse", "construction", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "con_sawhorse", "name": "Sawhorses", "subcategory": "construction", "source": "lpc", "lpcPath": "Objects/Furniture/Sawhorse.png", "tags": ["construction", "workshop", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "con_lumber", "name": "Lumber Stack", "subcategory": "construction", "source": "lpc", "lpcPath": "Objects/Small Items/Lumber.png", "tags": ["construction", "work", "props"], "decision": "approved", "decisionNotes": ""}, {"id": "con_workbench", "name": "Workbench (with tools)", "subcategory": "construction", "source": "lpc", "lpcPath": "Objects/Furniture/Workbench (Carpentry).png", "tags": ["construction", "workshop", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "con_toolbox", "name": "Toolbox", "subcategory": "construction", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Open and closed states", "tags": ["construction", "work", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "con_scaffolding", "name": "Scaffolding", "subcategory": "construction", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Modular tile, multiple heights", "tags": ["construction", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "con_cement_mixer", "name": "Cement Mixer", "subcategory": "construction", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Animated", "tags": ["construction", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "con_safety_cones", "name": "Safety Cones", "subcategory": "construction", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Orange, scatter prop", "tags": ["construction", "work", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "auto_lift", "name": "Car on Hydraulic Lift", "subcategory": "auto_repair", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Raised, silhouette", "tags": ["auto_repair", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "auto_pegboard", "name": "Tool Pegboard", "subcategory": "auto_repair", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Wall tile with tools", "tags": ["auto_repair", "work", "wall"], "decision": "flagged", "decisionNotes": ""}, {"id": "auto_creeper", "name": "Creeper Dolly", "subcategory": "auto_repair", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Floor prop", "tags": ["auto_repair", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "fac_conveyor", "name": "Assembly Line Conveyor", "subcategory": "factory", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Animated, directional tile", "tags": ["factory", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "fac_press", "name": "Industrial Press", "subcategory": "factory", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["factory", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "fac_robot_arm", "name": "Robotic Arm (silhouette)", "subcategory": "factory", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Background prop", "tags": ["factory", "work", "tech"], "decision": "flagged", "decisionNotes": ""}, {"id": "rest_prep_table", "name": "Long Prep Table", "subcategory": "restaurant", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Workshop).png", "notes": "Workshop table works as stainless prep table", "tags": ["restaurant", "kitchen", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "rest_grill", "name": "Industrial Flat Top Grill", "subcategory": "restaurant", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["restaurant", "kitchen", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "rest_fryer", "name": "Deep Fryer", "subcategory": "restaurant", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["restaurant", "kitchen", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "rest_pos", "name": "POS Terminal", "subcategory": "restaurant", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Counter-top", "tags": ["restaurant", "retail", "work", "tech"], "decision": "flagged", "decisionNotes": ""}, {"id": "ret_shopping_cart", "name": "Shopping Cart", "subcategory": "retail", "source": "lpc", "lpcPath": "Objects/Moveable/Shopping Cart.png", "tags": ["retail", "work"], "decision": "approved", "decisionNotes": ""}, {"id": "ret_cash_register", "name": "Cash Register / POS", "subcategory": "retail", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["retail", "work", "tech"], "decision": "flagged", "decisionNotes": ""}, {"id": "ret_shelving", "name": "Retail Shelving Units", "subcategory": "retail", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Aisle tile, stocked and sparse", "tags": ["retail", "work", "storage"], "decision": "flagged", "decisionNotes": ""}, {"id": "jan_mop", "name": "Mop and Bucket (Wheeled)", "subcategory": "janitorial", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["janitorial", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "jan_floor_buffer", "name": "Industrial Floor Buffer", "subcategory": "janitorial", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["janitorial", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "jan_wet_floor", "name": "Caution Wet Floor Sign", "subcategory": "janitorial", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Yellow, foldable", "tags": ["janitorial", "work", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "jan_supply_cart", "name": "Supply Cart (Rolling)", "subcategory": "janitorial", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["janitorial", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "med_wheelchair_black", "name": "Wheelchair (Black)", "subcategory": "hospital_room", "source": "lpc", "lpcPath": "Objects/Moveable/Wheelchair, Black.png", "tags": ["medical", "nursing_home", "mobility"], "decision": "approved", "decisionNotes": ""}, {"id": "med_wheelchair_blue", "name": "Wheelchair (Blue)", "subcategory": "hospital_room", "source": "lpc", "lpcPath": "Objects/Moveable/Wheelchair, Blue.png", "tags": ["medical", "nursing_home", "mobility"], "decision": "approved", "decisionNotes": ""}, {"id": "med_wheelchair_white", "name": "Wheelchair (White)", "subcategory": "hospital_room", "source": "lpc", "lpcPath": "Objects/Moveable/Wheelchair, White.png", "tags": ["medical", "nursing_home", "mobility"], "decision": "approved", "decisionNotes": ""}, {"id": "med_hospital_bed", "name": "Hospital Bed", "subcategory": "hospital_room", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Single B.png", "notes": "Single bed used as hospital bed, may need white linen edit", "tags": ["hospital_room", "nursing_home", "medical", "sleep"], "decision": "approved", "decisionNotes": ""}, {"id": "med_curtain_divider", "name": "Curtain Room Divider", "subcategory": "hospital_room", "source": "lpc", "lpcPath": "Objects/Wall Items/Curtains.png", "notes": "Standard curtains repurposed as hospital room divider", "tags": ["hospital_room", "medical"], "decision": "approved", "decisionNotes": ""}, {"id": "med_iv_stand", "name": "IV Stand (with bag)", "subcategory": "hospital_room", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["hospital_room", "medical"], "decision": "flagged", "decisionNotes": ""}, {"id": "med_visitor_chair", "name": "Visitor Chair", "subcategory": "hospital_room", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Dining A.png", "notes": "Plain dining chair works as visitor chair", "tags": ["hospital_room", "medical", "seating"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Dining (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "nh_wheelchair_tan", "name": "Wheelchair (Tan)", "subcategory": "nursing_home", "source": "lpc", "lpcPath": "Objects/Moveable/Wheelchair, Tan.png", "tags": ["nursing_home", "medical", "mobility"], "decision": "approved", "decisionNotes": ""}, {"id": "nh_bed", "name": "Hospital-Style Bed", "subcategory": "nursing_home", "source": "lpc", "lpcPath": "Objects/Furniture/Beds/Beds, Single B.png", "notes": "Used as nursing home bed", "tags": ["nursing_home", "medical", "sleep"], "decision": "approved", "decisionNotes": ""}, {"id": "nh_walker", "name": "Walker", "subcategory": "nursing_home", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Beside bed", "tags": ["nursing_home", "medical", "mobility"], "decision": "flagged", "decisionNotes": ""}, {"id": "nh_medication_tray", "name": "Medication Tray", "subcategory": "nursing_home", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Bedside prop", "tags": ["nursing_home", "medical", "props"], "decision": "flagged", "decisionNotes": ""}, {"id": "nh_common_chairs", "name": "Comfortable Chairs (Common Room)", "subcategory": "nursing_home", "source": "lpc", "lpcPath": "Objects/Furniture/Seating/Chair, Sofa A.png", "tags": ["nursing_home", "seating"], "lpcPathFixed": true, "lpcPathOld": "Objects/Furniture/Seating/Chair, Sofa (A).png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "nh_puzzle_table", "name": "Puzzle Table", "subcategory": "nursing_home", "source": "lpc", "lpcPath": "Objects/Furniture/Table (Card).png", "notes": "Card table works as puzzle table", "tags": ["nursing_home", "props", "furniture"], "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged during session with imgLoaded race condition bug; path is correct, image likely loads fine now"}, {"id": "out_mailbox", "name": "Mailbox", "subcategory": "residential_outdoor", "source": "lpc", "lpcPath": "Objects/Wall Items/Mailboxes (tiling).png", "tags": ["outdoor", "residential", "wall"], "decision": "approved", "decisionNotes": ""}, {"id": "out_fence_plain", "name": "Fence, Plain", "subcategory": "residential_outdoor", "source": "lpc", "lpcPath": "Structure/Fences/Plain Fence A.png", "tags": ["outdoor", "residential", "structure", "fence"], "decision": "approved", "decisionNotes": ""}, {"id": "out_fence_ornamental_a", "name": "Fence, Ornamental A", "subcategory": "residential_outdoor", "source": "lpc", "lpcPath": "Structure/Fences/Ornamental Fence A.png", "tags": ["outdoor", "residential", "structure", "fence"], "decision": "approved", "decisionNotes": ""}, {"id": "out_fence_ornamental_b", "name": "Fence, Ornamental B", "subcategory": "residential_outdoor", "source": "lpc", "lpcPath": "Structure/Fences/Ornamental Fence B.png", "tags": ["outdoor", "residential", "structure", "fence"], "decision": "approved", "decisionNotes": ""}, {"id": "out_flowers_garden", "name": "Flower Beds / Garden", "subcategory": "residential_outdoor", "source": "lpc", "lpcPath": "Objects/Small Items/Flowers.png", "tags": ["outdoor", "residential", "decor", "nature"], "decision": "approved", "decisionNotes": ""}, {"id": "out_planter_outdoor", "name": "Outdoor Planter", "subcategory": "residential_outdoor", "source": "lpc", "lpcPath": "Objects/Furniture/Planter.png", "tags": ["outdoor", "residential", "decor"], "decision": "approved", "decisionNotes": ""}, {"id": "out_bbq", "name": "BBQ Grill", "subcategory": "residential_outdoor", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Patio prop", "tags": ["outdoor", "residential"], "decision": "flagged", "decisionNotes": ""}, {"id": "out_basketball_hoop", "name": "Driveway Basketball Hoop", "subcategory": "residential_outdoor", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["outdoor", "residential", "sports"], "decision": "flagged", "decisionNotes": ""}, {"id": "out_swing_set", "name": "Swing Set", "subcategory": "playground", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Backyard / playground", "tags": ["playground", "outdoor", "childhood", "residential"], "decision": "flagged", "decisionNotes": ""}, {"id": "out_trampoline", "name": "Trampoline", "subcategory": "residential_outdoor", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Backyard", "tags": ["outdoor", "residential", "childhood"], "decision": "flagged", "decisionNotes": ""}, {"id": "urban_graffiti", "name": "Graffiti Wall", "subcategory": "urban_street", "source": "lpc", "lpcPath": "Objects/Wall Items/Graffiti.png", "tags": ["urban", "outdoor", "decor", "wall"], "decision": "approved", "decisionNotes": ""}, {"id": "urban_graffiti_elements", "name": "Graffiti Elements", "subcategory": "urban_street", "source": "lpc", "lpcPath": "Objects/Wall Items/Graffiti Elements.png", "tags": ["urban", "outdoor", "decor", "wall"], "decision": "approved", "decisionNotes": ""}, {"id": "urban_vending", "name": "Street Vending Machine", "subcategory": "urban_street", "source": "lpc", "lpcPath": "Objects/Furniture/Vending Machine.png", "tags": ["urban", "outdoor"], "decision": "approved", "decisionNotes": ""}, {"id": "nat_campfire", "name": "Campfire", "subcategory": "nature", "source": "lpc", "lpcPath": "Objects/Small Items/Fire, Camp.png", "notes": "Animated flame", "tags": ["outdoor", "nature", "camping", "fire"], "lpcPathFixed": true, "lpcPathOld": "Objects/Small Items/Fire Camp.png", "decision": "flagged", "decisionNotes": "", "needsReReview": true, "reReviewReason": "Flagged due to wrong lpcPath (now fixed); please re-review"}, {"id": "nat_flowers", "name": "Wildflowers / Plants", "subcategory": "nature", "source": "lpc", "lpcPath": "Objects/Small Items/Flowers.png", "tags": ["outdoor", "nature", "decor"], "decision": "approved", "decisionNotes": ""}, {"id": "spec_gravestone", "name": "Cemetery Gravestones", "subcategory": "special", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Multiple styles, weathered", "tags": ["cemetery", "special", "late_life", "outdoor"], "decision": "flagged", "decisionNotes": ""}, {"id": "spec_iron_fence", "name": "Iron Fence (Cemetery)", "subcategory": "special", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Tile", "tags": ["cemetery", "special", "outdoor", "structure"], "decision": "flagged", "decisionNotes": ""}, {"id": "spec_weeping_willow", "name": "Weeping Willow", "subcategory": "special", "source": "gap", "lpcPath": null, "needsGeneration": true, "tags": ["cemetery", "special", "outdoor", "nature"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_car_front", "name": "Car Interior, Front Seat", "subcategory": "vehicle_car", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Dashboard, steering wheel, gear shift, rearview mirror", "tags": ["vehicles", "car"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_car_back", "name": "Car Interior, Back Seat", "subcategory": "vehicle_car", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Bench seat, window view, behind headrests", "tags": ["vehicles", "car"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_school_bus", "name": "School Bus Interior", "subcategory": "vehicle_bus", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Rows of green seats, aisle, large windows, driver compartment", "tags": ["vehicles", "school", "childhood"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_bigrig", "name": "Big Rig Cab Interior", "subcategory": "vehicle_bigrig", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Wide dashboard, CB radio, gauges, cup holder, sleeper bunk", "tags": ["vehicles", "trucking", "work"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_airplane", "name": "Airplane Cabin", "subcategory": "vehicle_airplane", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "3+3 seats, overhead bins, small oval windows, aisle", "tags": ["vehicles", "travel", "special"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_subway", "name": "Subway Car Interior", "subcategory": "vehicle_subway", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Bench seats along walls, hanging rails, doors, route map overhead", "tags": ["vehicles", "urban"], "decision": "flagged", "decisionNotes": ""}, {"id": "veh_bicycle", "name": "Bicycle", "subcategory": "vehicle_bicycle", "source": "gap", "lpcPath": null, "needsGeneration": true, "notes": "Exterior prop / player mount", "tags": ["vehicles", "outdoor", "childhood", "teen_bedroom"], "decision": "flagged", "decisionNotes": ""}], "lastReviewDate": "2026-04-04", "reviewSummary": {"approved": 91, "flagged": 126, "rejected": 1, "maybe": 0, "pending": 0, "pathsFixed": 27, "needsReReview": 30}};
+
+  useEffect(() => {
+    // Try fetch first (works when served via http), fall back to embedded
+    fetch('./catalog.json')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const src = (data?.assets?.length > 0) ? data : EMBEDDED_CATALOG;
+        setCatalog(src.assets);
+        setCatalogLoaded(true);
+      })
+      .catch(() => {
+        setCatalog(EMBEDDED_CATALOG.assets);
+        setCatalogLoaded(true);
+      });
+  }, []);
+
+  // Persist decisions + history
+  useEffect(() => { saveStorage('sprite_decisions', decisions); }, [decisions]);
+  useEffect(() => { saveStorage('sprite_history', history); }, [history]);
+
+  const applyDecision = useCallback((assetId, action, notes='') => {
+    // Navigation signal from lightbox arrows
+    if (assetId === '__navigate__') {
+      const target = catalog.find(a => a.id === action);
+      if (target) setSelectedAsset(target);
+      return;
+    }
+    const asset = catalog.find(a => a.id === assetId);
+    setDecisions(prev => ({
+      ...prev,
+      [assetId]: { ...(prev[assetId]||{}), status: action, notes, decidedAt: new Date().toISOString() }
+    }));
+    setHistory(prev => [...prev, {
+      assetId, assetName: asset?.name || assetId,
+      action, notes, timestamp: new Date().toISOString()
+    }]);
+  }, [catalog]);
+
+  // Ref always holds the latest visibleAssets — no stale-closure risk, no ordering dependency
+  const visibleAssetsRef = useRef([]);
+
+  // Called by lightbox decision buttons — App owns navigation so closure is always fresh
+  const handleDecide = useCallback((assetId, action, notes) => {
+    // Read from ref so we always have the current list regardless of render order
+    const list = visibleAssetsRef.current;
+    const idx = list.findIndex(a => a.id === assetId);
+    const nextAsset = list[idx + 1] ?? null;
+    applyDecision(assetId, action, notes);
+    // Small delay so the flash colour has time to show, then navigate
+    setTimeout(() => {
+      setSelectedAsset(nextAsset);
+    }, 260);
+  }, [applyDecision]);
+
+  const saveEdit = useCallback((assetId, dataUrl) => {
+    setDecisions(prev => ({
+      ...prev,
+      [assetId]: { ...(prev[assetId]||{}), editedUrl: dataUrl }
+    }));
+    setEditingAsset(null);
+  }, []);
+
+  const exportApproved = () => {
+    const approved = catalog.filter(a => (decisions[a.id]?.status||'pending') === 'approved')
+      .map(a => ({
+        id: a.id, name: a.name, subcategory: a.subcategory, source: a.source,
+        lpcPath: a.lpcPath, url: getLPCUrl(a.lpcPath), tags: a.tags,
+        notes: decisions[a.id]?.notes||'',
+        hasEdits: !!decisions[a.id]?.editedUrl,
+      }));
+    const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), assets: approved }, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'approved_assets.json';
+    a.click();
+  };
+
+  const exportAllDecisions = () => {
+    const all = catalog.map(a => ({
+      id: a.id, name: a.name, subcategory: a.subcategory,
+      source: a.source, lpcPath: a.lpcPath || null,
+      needsGeneration: a.needsGeneration || false,
+      tags: a.tags || [],
+      status: decisions[a.id]?.status || 'pending',
+      notes: decisions[a.id]?.notes || '',
+      hasEdits: !!decisions[a.id]?.editedUrl,
+      decidedAt: decisions[a.id]?.decidedAt || null,
+    }));
+    const summary = {
+      approved: all.filter(a => a.status === 'approved').length,
+      rejected: all.filter(a => a.status === 'rejected').length,
+      maybe:    all.filter(a => a.status === 'maybe').length,
+      flagged:  all.filter(a => a.status === 'flagged').length,
+      pending:  all.filter(a => a.status === 'pending').length,
+    };
+    const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), summary, assets: all }, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'all_decisions.json';
+    a.click();
+  };
+
+  const exportHistory = () => {
+    const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), history }, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'review_history.json';
+    a.click();
+  };
+
+  const importBatch = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const newAssets = data.assets || [];
+        setCatalog(prev => {
+          const ids = new Set(prev.map(a=>a.id));
+          return [...prev, ...newAssets.filter(a=>!ids.has(a.id))];
+        });
+      } catch(err) { alert('Invalid JSON file'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const resetAll = () => {
+    if (!window.confirm('Reset ALL decisions? This cannot be undone.')) return;
+    setDecisions({});
+    setHistory([]);
+  };
+
+  // Filtered assets
+  const visibleAssets = useMemo(() => {
+    let list = catalog;
+    if (activeCategory === 'gaps') {
+      list = list.filter(a => a.source === 'gap');
+    } else if (activeCategory !== 'all') {
+      list = list.filter(a => a.subcategory === activeCategory);
+    }
+    if (statusFilter !== 'all') {
+      list = list.filter(a => (decisions[a.id]?.status||'pending') === statusFilter);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(a => a.name.toLowerCase().includes(q) || a.tags?.some(t=>t.includes(q)));
+    }
+    return list;
+  }, [catalog, activeCategory, statusFilter, search, decisions]);
+  // Keep ref in sync — runs synchronously during render, before any callbacks fire
+  visibleAssetsRef.current = visibleAssets;
+
+  // Stats
+  const stats = useMemo(() => {
+    const total = catalog.length;
+    const approved = catalog.filter(a => (decisions[a.id]?.status||'pending') === 'approved').length;
+    const rejected = catalog.filter(a => (decisions[a.id]?.status||'pending') === 'rejected').length;
+    const maybe    = catalog.filter(a => (decisions[a.id]?.status||'pending') === 'maybe').length;
+    const pending  = total - approved - rejected - maybe - catalog.filter(a=>(decisions[a.id]?.status||'pending')==='flagged').length;
+    return { total, approved, rejected, maybe, pending };
+  }, [catalog, decisions]);
+
+  const catLabel = useMemo(() => {
+    if (activeCategory === 'all') return 'All Assets';
+    if (activeCategory === 'gaps') return 'Needs Generation';
+    for (const g of TAXONOMY) {
+      if (g.id === activeCategory) return g.label;
+      for (const c of (g.children||[])) { if (c.id === activeCategory) return `${g.label} / ${c.label}`; }
+    }
+    return activeCategory;
+  }, [activeCategory]);
+
+  return (
+    <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+      {/* ── HEADER ── */}
+      <div style={{background:'#1e293b',borderBottom:'1px solid #334155',padding:'0 16px',height:50,display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
+        <div style={{fontWeight:700,fontSize:15,color:'#a5b4fc',letterSpacing:'-0.01em',flexShrink:0}}>◈ Sprite Review</div>
+        <div style={{width:1,height:20,background:'#334155',flexShrink:0}}/>
+
+        {/* Search */}
+        <div style={{position:'relative',flex:'1 1 200px',maxWidth:280}}>
+          <span style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',color:'#475569',pointerEvents:'none'}}>⌕</span>
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search assets…"
+            style={{width:'100%',background:'#0f172a',border:'1px solid #334155',borderRadius:6,padding:'5px 8px 5px 26px',color:'#e2e8f0',fontSize:13,outline:'none'}}
+          />
+        </div>
+
+        {/* Status filter tabs */}
+        <div style={{display:'flex',gap:2,background:'#0f172a',borderRadius:6,padding:2,border:'1px solid #334155'}}>
+          {['all','pending','approved','rejected','maybe','flagged'].map(f => (
+            <button key={f} onClick={()=>setStatusFilter(f)}
+              style={{padding:'3px 10px',borderRadius:4,background:statusFilter===f?'#334155':'transparent',border:'none',cursor:'pointer',
+                      color:statusFilter===f?'#e2e8f0':'#64748b',fontSize:11,fontWeight:statusFilter===f?600:400,whiteSpace:'nowrap'}}>
+              {f==='all'?'All':STATUS[f]?.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{flex:1}}/>
+
+        {/* Global stats */}
+        <div style={{display:'flex',gap:12,fontSize:11,color:'#64748b',flexShrink:0}}>
+          {[['✓',stats.approved,'#4ade80'],['✗',stats.rejected,'#f87171'],['?',stats.maybe,'#fbbf24'],['○',stats.pending,'#64748b']].map(([ic,n,c]) => (
+            <span key={ic} style={{color:c}}>{ic} {n}</span>
+          ))}
+        </div>
+
+        <div style={{width:1,height:20,background:'#334155',flexShrink:0}}/>
+
+        {/* Actions */}
+        <label title="Import asset batch JSON" style={{padding:'5px 10px',borderRadius:6,background:'transparent',border:'1px solid #334155',color:'#94a3b8',cursor:'pointer',fontSize:12,flexShrink:0}}>
+          ↑ Import
+          <input type="file" accept=".json" style={{display:'none'}} onChange={importBatch}/>
+        </label>
+        <button onClick={exportAllDecisions} title="Export all decisions (all statuses)"
+          style={{padding:'5px 10px',borderRadius:6,background:'rgba(16,185,129,0.2)',border:'1px solid rgba(52,211,153,0.4)',color:'#6ee7b7',cursor:'pointer',fontSize:12,flexShrink:0}}>
+          ↓ All Decisions
+        </button>
+        <button onClick={exportApproved} title="Export approved assets only"
+          style={{padding:'5px 10px',borderRadius:6,background:'rgba(79,70,229,0.2)',border:'1px solid rgba(99,102,241,0.4)',color:'#a5b4fc',cursor:'pointer',fontSize:12,flexShrink:0}}>
+          ↓ Approved
+        </button>
+        <button onClick={exportHistory} title="Export decision history"
+          style={{padding:'5px 10px',borderRadius:6,background:'transparent',border:'1px solid #334155',color:'#64748b',cursor:'pointer',fontSize:12,flexShrink:0}}>
+          📋 Log
+        </button>
+        <button onClick={resetAll} title="Reset all decisions"
+          style={{padding:'5px 8px',borderRadius:6,background:'transparent',border:'1px solid #334155',color:'#475569',cursor:'pointer',fontSize:12,flexShrink:0}}>
+          ↺
+        </button>
+      </div>
+
+      {/* ── BODY ── */}
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+        {/* Sidebar */}
+        <Sidebar
+          activeCategory={activeCategory}
+          onSelect={cat => { setActiveCategory(cat); setSelectedAsset(null); }}
+          decisions={decisions}
+          assets={catalog}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+        />
+
+        {/* Main content */}
+        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          {/* Category header */}
+          <div style={{padding:'8px 16px',borderBottom:'1px solid #334155',display:'flex',alignItems:'center',gap:10,flexShrink:0,background:'#131d2e'}}>
+            <span style={{fontWeight:600,fontSize:14,color:'#e2e8f0'}}>{catLabel}</span>
+            <span style={{fontSize:12,color:'#475569'}}>{visibleAssets.length} assets</span>
+            <div style={{flex:1}}/>
+            {/* Progress bar */}
+            {catalog.length > 0 && (() => {
+              const catAssets = activeCategory==='all' ? catalog : activeCategory==='gaps' ? catalog.filter(a=>a.source==='gap') : catalog.filter(a=>a.subcategory===activeCategory);
+              const done = catAssets.filter(a=>['approved','rejected'].includes(decisions[a.id]?.status||'pending')).length;
+              const pct = catAssets.length ? Math.round(done/catAssets.length*100) : 0;
+              return (
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:11,color:'#475569'}}>{done}/{catAssets.length} reviewed</span>
+                  <div style={{width:80,height:4,background:'#1e293b',borderRadius:2,overflow:'hidden'}}>
+                    <div style={{width:`${pct}%`,height:'100%',background:'#4f46e5',borderRadius:2,transition:'width 0.3s'}}/>
+                  </div>
+                  <span style={{fontSize:11,color:'#6366f1'}}>{pct}%</span>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Grid + detail */}
+          <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+            {/* Grid */}
+            <div style={{flex:1,overflow:'auto',padding:16}}>
+              {visibleAssets.length === 0 ? (
+                <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'#475569',flexDirection:'column',gap:6}}>
+                  <div style={{fontSize:32}}>◈</div>
+                  <div>No assets match this filter</div>
+                  <div style={{fontSize:11,color:'#334155'}}>Try changing category or status filter</div>
+                </div>
+              ) : (
+                <div className="fade-in" style={{display:'flex',flexWrap:'wrap',gap:12,alignContent:'flex-start'}}>
+                  {visibleAssets.map(asset => (
+                    <AssetCard
+                      key={asset.id}
+                      asset={asset}
+                      state={decisions[asset.id]||{}}
+                      onSelect={setSelectedAsset}
+                      onAction={applyDecision}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+  {/* (detail panel removed — now a lightbox) */}
+          </div>
+
+          {/* History panel */}
+          <HistoryPanel history={history} isOpen={historyOpen} onToggle={()=>setHistoryOpen(o=>!o)}/>
+        </div>
+      </div>
+
+      {/* Lightbox modal */}
+      {selectedAsset && !editingAsset && (
+        <LightboxModal
+          asset={selectedAsset}
+          state={decisions[selectedAsset.id]||{}}
+          visibleAssets={visibleAssets}
+          onAction={applyDecision}
+          onDecide={handleDecide}
+          onEdit={setEditingAsset}
+          onClose={() => setSelectedAsset(null)}
+        />
+      )}
+
+      {/* Pixel editor modal */}
+      {editingAsset && (
+        <PixelEditor
+          asset={editingAsset}
+          editedUrl={decisions[editingAsset.id]?.editedUrl}
+          onSave={saveEdit}
+          onClose={() => setEditingAsset(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

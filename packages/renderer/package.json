@@ -1,0 +1,26 @@
+{
+  "name": "@potential/renderer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "*"
+  },
+  "dependencies": {
+    "@potential/shared": "workspace:*",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  }
+}

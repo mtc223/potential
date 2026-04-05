@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+out/
+.turbo/
+
+# Tauri
+src-tauri/target/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.local
+*.zip
+
+# Superseded context files — content merged into CLAUDE.md
+# Delete these manually (filesystem permissions prevent programmatic removal)
+claude.md
+instructions.md
+memory.md
+ONBOARDING.md
