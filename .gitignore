@@ -43,8 +43,6 @@ coverage/
 *.zip
 
 # Superseded context files — content merged into CLAUDE.md
-# Delete these manually (filesystem permissions prevent programmatic removal)
-claude.md
 instructions.md
 memory.md
 ONBOARDING.md
