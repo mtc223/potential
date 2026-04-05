@@ -63,4 +63,3 @@ Design documents are in `docs/`. The full section-level index is at `docs/index.
 ## Status
 
 April 2026 — monorepo scaffolded, all 11 design documents written, issue backlog defined. Phase 1 (the harness) hasn't started yet. Everything is tagged `ac_status: needs-ac` — Michael writes the acceptance criteria before any implementation begins.
-# verified
