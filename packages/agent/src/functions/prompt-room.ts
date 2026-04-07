@@ -2,7 +2,7 @@
 // Placeholder stub. Full implementation requires AC from PM.
 
 import type Anthropic from "@anthropic-ai/sdk";
-import { RoomSchema, type RoomLLMOutput } from "@potential/shared";
+import type { RoomLLMOutput } from "@potential/shared";
 import { SONNET_MODEL } from "../client.js";
 
 export function promptRoom(
