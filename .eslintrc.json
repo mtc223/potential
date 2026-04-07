@@ -1,0 +1,92 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/strict-type-checked"
+  ],
+  "parserOptions": {
+    "project": true,
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-non-null-assertion": "error",
+    "@typescript-eslint/consistent-type-imports": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.{tsx,jsx}"],
+      "parserOptions": {
+        "ecmaFeatures": { "jsx": true }
+      }
+    },
+    {
+      "files": ["packages/renderer/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@potential/agent"],
+                "message": "renderer may only import from @potential/shared"
+              },
+              {
+                "group": ["@potential/harness"],
+                "message": "renderer may only import from @potential/shared"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/agent/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@potential/renderer"],
+                "message": "agent may only import from @potential/shared"
+              },
+              {
+                "group": ["@potential/harness"],
+                "message": "agent may only import from @potential/shared"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/harness/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@potential/renderer"],
+                "message": "harness may only import from @potential/shared"
+              },
+              {
+                "group": ["@potential/agent"],
+                "message": "harness may only import from @potential/shared"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["scripts/**", "*.{js,cjs,mjs}"],
+      "extends": ["plugin:@typescript-eslint/disable-type-checked"],
+      "env": { "node": true }
+    }
+  ]
+}

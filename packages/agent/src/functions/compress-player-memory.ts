@@ -5,7 +5,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { HAIKU_MODEL } from "../client.js";
 
-export async function compressPlayerMemory(
+export function compressPlayerMemory(
   client: Anthropic,
   _roomDescription: string,
   _events: string[]
