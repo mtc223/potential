@@ -1,19 +1,4 @@
 {
-  "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/strict-type-checked"
-  ],
-  "rules": {
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-non-null-assertion": "error",
-    "@typescript-eslint/consistent-type-imports": "error",
-    "no-restricted-imports": [
-      "error",
-      {
-        "message": "Import from @potential/shared instead"
-      }
-    ]
-  }
+  "_comment": "Superseded by .eslintrc.json at repo root. This file is no longer active.",
+  "_see": ".eslintrc.json"
 }

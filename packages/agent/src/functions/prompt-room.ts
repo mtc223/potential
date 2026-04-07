@@ -5,7 +5,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { RoomSchema, type RoomLLMOutput } from "@potential/shared";
 import { SONNET_MODEL } from "../client.js";
 
-export async function promptRoom(
+export function promptRoom(
   client: Anthropic,
   _lifeContext: string
 ): Promise<RoomLLMOutput> {

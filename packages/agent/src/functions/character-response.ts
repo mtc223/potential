@@ -4,7 +4,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { HAIKU_MODEL } from "../client.js";
 
-export async function characterResponse(
+export function characterResponse(
   client: Anthropic,
   _characterState: string,
   _playerIntent: string
