@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
+    "test": "turbo run test",
     "clean": "turbo run clean",
     "prepare": "husky"
   },
@@ -16,7 +17,8 @@
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.57.0",
     "husky": "^9.0.0",
-    "lint-staged": "^15.0.0"
+    "lint-staged": "^15.0.0",
+    "vitest": "^1.6.0"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": "eslint --fix --max-warnings 0"
