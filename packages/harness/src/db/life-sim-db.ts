@@ -17,9 +17,10 @@ export type StoredCurrentLife = PlayerIdentity & { readonly id: 1 };
  *
  * Version history:
  *   v1 — initial schema: rooms (append-only singly-linked list) + currentLife (single-record)
+ *   v2 — rooms: add nextRoomId index (enables forward traversal; null = current tail)
  *
- * Any structural change (new table, added index, removed index) MUST increment the version
- * and supply an explicit migration function via `.upgrade()`.
+ * Any structural change (new table, added index, removed index) MUST increment the version.
+ * Data migrations require an explicit `.upgrade()` callback.
  *
  * IndexedDB is a crash-recovery buffer, not a multi-life archive.
  * On death: clear both tables. Rooms are never deleted mid-life.
@@ -32,13 +33,14 @@ export class LifeSimDb extends Dexie {
    * Append-only singly-linked list of rooms for the active life.
    *
    * Indexed fields:
-   *   - id           (primary key)
-   *   - sequenceIndex (ordered traversal)
-   *   - previousRoomId (linked-list pointer; null for birth room)
-   *   - exitedAt      (null while current room; set on transition)
+   *   - id             (primary key)
+   *   - sequenceIndex  (ordered traversal; used for getTailRoom)
+   *   - previousRoomId (backward pointer; null for birth room)
+   *   - nextRoomId     (forward pointer; null for current tail)
+   *   - exitedAt       (null while current room; set on transition)
    *
-   * Rooms are never updated after creation except: `summary` and `exitedAt` (written on exit).
-   * All other mutations are forbidden to preserve the singly-linked list invariant (#3).
+   * Rooms are persisted only after exit (summary + exitedAt must be set).
+   * The sole post-insert mutation: nextRoomId is set when the next room is inserted.
    */
   rooms!: Table<Room, Room["id"]>;
 
@@ -48,12 +50,22 @@ export class LifeSimDb extends Dexie {
    */
   currentLife!: Table<StoredCurrentLife, 1>;
 
-  constructor() {
-    super("LifeSimulator");
+  /**
+   * @param name - DB name. Override in tests for isolation (default: "LifeSimulator").
+   */
+  constructor(name = "LifeSimulator") {
+    super(name);
 
-    // v1 — locked. Future structural changes require .version(2).stores({...}).upgrade().
+    // v1 — original schema.
     this.version(1).stores({
       rooms: "id, sequenceIndex, previousRoomId, exitedAt",
+      currentLife: "id",
+    });
+
+    // v2 — add nextRoomId index for forward traversal.
+    // No data migration needed: adding an index is handled automatically by IndexedDB.
+    this.version(2).stores({
+      rooms: "id, sequenceIndex, previousRoomId, exitedAt, nextRoomId",
       currentLife: "id",
     });
   }
