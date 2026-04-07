@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "type-check": "tsc --noEmit",
     "lint": "eslint src/",
+    "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist"
   },
   "devDependencies": {

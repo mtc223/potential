@@ -9,10 +9,13 @@
     "build": "tsc -p tsconfig.json",
     "type-check": "tsc --noEmit",
     "lint": "eslint src/",
+    "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "typescript": "*"
+    "typescript": "*",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0"
   },
   "dependencies": {
     "@potential/shared": "workspace:*",
