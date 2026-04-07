@@ -2,4 +2,4 @@
 // All persistence lives here. No server. No Redis. Pure IndexedDB.
 // Placeholder — implementation begins in Phase 1.
 
-export { LifeSimDb } from "./life-sim-db.js";
+export { db, LifeSimDb, type StoredCurrentLife } from "./life-sim-db.js";
