@@ -15,10 +15,16 @@ export interface Room {
   readonly sequenceIndex: number;
   /** Pointer to prior room — null for birth room. Singly-linked list. */
   readonly previousRoomId: RoomId | null;
+  /**
+   * Pointer to the next room — null for the current tail.
+   * Set atomically when the subsequent room is inserted.
+   * This is the sole controlled mutation allowed on a persisted room record.
+   */
+  nextRoomId: RoomId | null;
   label: string;
   description: string;
   objects: Map<ObjectId, WorldObject>;
-  /** Compressed summary written on room exit. */
+  /** Compressed summary written on room exit. Must be non-null before a room is persisted. */
   summary: string | null;
   era: Era;
   createdAt: number; // unix ms
