@@ -14,7 +14,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   currentRoom: null,
   player: null,
   isGenerating: false,
-  setCurrentRoom: (room) => set({ currentRoom: room }),
-  setPlayer: (player) => set({ player }),
-  setGenerating: (isGenerating) => set({ isGenerating }),
+  setCurrentRoom: (room) => { set({ currentRoom: room }); },
+  setPlayer: (player) => { set({ player }); },
+  setGenerating: (isGenerating) => { set({ isGenerating }); },
 }));
