@@ -119,6 +119,9 @@ importers:
       typescript:
         specifier: '*'
         version: 5.9.3
+      vitest:
+        specifier: '*'
+        version: 1.6.1(@types/node@18.19.130)
 
   packages/renderer:
     dependencies:
