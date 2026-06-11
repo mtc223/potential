@@ -137,6 +137,17 @@ describe("10-room end-to-end smoke test (#15)", () => {
     expect(must(await loadLifeContext(db), "ctx").compressedHistory).toHaveLength(1);
   });
 
+  it("replaces a pre-verbal player's speech with babble before it reaches the world", async () => {
+    await engine.startNewLife(startParams); // newborn — age 0
+    const npc = must(findNpc(currentRoom()), "npc in birth room");
+    const { spokenText } = await engine.talkTo(npc, "Hello there, fine sir.");
+    expect(spokenText.length).toBeGreaterThan(0);
+    expect(spokenText.toLowerCase()).not.toContain("hello");
+    // The event log records what came out of the mouth, not the typed text.
+    const event = must(currentRoom().events.find((e) => e.type === "dialogue"), "dialogue event");
+    expect(event.playerChoice).toBe(spokenText.slice(0, 200));
+  });
+
   it("records dialogue and interactions as room events that reach compression", async () => {
     await engine.startNewLife(startParams);
     const npc = must(findNpc(currentRoom()), "npc in birth room");

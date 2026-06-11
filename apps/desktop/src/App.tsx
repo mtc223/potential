@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ASSET_CATALOG,
   GAME_CONFIG,
+  babbleize,
+  isPreverbal,
   sanitizeName,
   type Era,
   type LifeContext,
@@ -320,11 +322,12 @@ export default function App(): JSX.Element {
     void (async () => {
       setGenerating("…");
       try {
-        const { response, character } = await engine.talkTo(npc, line, history);
+        const { response, character, spokenText } = await engine.talkTo(npc, line, history);
+        if (spokenText !== line) pushMonologue(`What you meant: "${line}". What came out: "${spokenText}"`);
         syncFromEngine();
         const newHistory = [
           ...history,
-          { speaker: "player" as const, text: line },
+          { speaker: "player" as const, text: spokenText },
           { speaker: "character" as const, text: response.dialogue },
         ];
         playBark(response.dialogue, character.name);
@@ -357,6 +360,22 @@ export default function App(): JSX.Element {
         characterIds: [],
       });
       pushMonologue(text);
+      setBottom({ kind: "explore" });
+      return;
+    }
+    // Pre-verbal: the words don't exist yet. No intent to classify — the
+    // babble just hangs in the air (talking AT someone goes through [E]).
+    const age = engine.context?.playerAgeYears ?? Infinity;
+    if (isPreverbal(age)) {
+      const babble = babbleize(text, age);
+      engine.recordEvent({
+        type: "speech",
+        description: "Babbled aloud",
+        playerChoice: babble.slice(0, 200),
+        outcome: "",
+        characterIds: [],
+      });
+      pushMonologue(`You try to say it. What comes out: "${babble}"`);
       setBottom({ kind: "explore" });
       return;
     }
@@ -475,14 +494,24 @@ export default function App(): JSX.Element {
         )}
         {bottom.kind === "converse" && (
           <PromptInput
-            placeholder={`Say something to ${bottom.npc.label}… (Esc to walk away)`}
+            placeholder={
+              isPreverbal(context?.playerAgeYears ?? Infinity)
+                ? `Try to talk to ${bottom.npc.label}… it will come out as baby talk (Esc to walk away)`
+                : `Say something to ${bottom.npc.label}… (Esc to walk away)`
+            }
             onSubmit={(text) => { handleConversationLine(bottom.npc, bottom.history, text); }}
             onCancel={() => { setBottom({ kind: "explore" }); }}
           />
         )}
         {bottom.kind === "input" && (
           <PromptInput
-            placeholder={bottom.purpose === "think" ? "What's on your mind…" : "Say it out loud…"}
+            placeholder={
+              bottom.purpose === "think"
+                ? "What's on your mind…"
+                : isPreverbal(context?.playerAgeYears ?? Infinity)
+                  ? "Try to say it… (you can't talk yet)"
+                  : "Say it out loud…"
+            }
             onSubmit={(text) => { handleFreeText(bottom.purpose, text); }}
             onCancel={() => { setBottom({ kind: "explore" }); }}
           />

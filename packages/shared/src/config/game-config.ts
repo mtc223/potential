@@ -19,6 +19,10 @@ export const GAME_CONFIG = {
     },
     minSpeedMultiplier: 0.3,
   },
+  speech: {
+    /** Below this age, anything the player says comes out as babble. */
+    speechAgeYears: 4,
+  },
   interaction: {
     /** Sub-tile units. */
     objectInteractRadius: 48,

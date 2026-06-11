@@ -1,5 +1,6 @@
 import {
   GAME_CONFIG,
+  babbleize,
   type CharacterRecord,
   type CharacterResponseLLMOutput,
   type Era,
@@ -186,12 +187,17 @@ export class GameEngine {
     return playerIntent(this.adapter, this.mustContext(), this.mustRoom(), text);
   }
 
-  /** Talk to an NPC in the current room. */
+  /**
+   * Talk to an NPC in the current room. Below the speech age, the typed text
+   * is replaced with babble before it reaches the world — the NPC hears (and
+   * the event records) what actually came out of the player's mouth.
+   * `spokenText` is what got said; callers display it, not the input.
+   */
   async talkTo(
     object: WorldObject,
     playerText: string,
     history: { speaker: "player" | "character"; text: string }[] = [],
-  ): Promise<{ response: CharacterResponseLLMOutput; character: CharacterRecord }> {
+  ): Promise<{ response: CharacterResponseLLMOutput; character: CharacterRecord; spokenText: string }> {
     const context = this.mustContext();
     if (object.characterId === undefined) {
       throw new Error(`talkTo: "${object.label}" is not a character`);
@@ -201,7 +207,8 @@ export class GameEngine {
       throw new Error(`talkTo: character "${object.label}" missing from roster`);
     }
 
-    const response = await characterResponse(this.adapter, context, character, playerText, history);
+    const spokenText = babbleize(playerText, context.playerAgeYears);
+    const response = await characterResponse(this.adapter, context, character, spokenText, history);
 
     if (response.affectionDeltas !== undefined) {
       const next = { ...character.affection };
@@ -222,11 +229,11 @@ export class GameEngine {
     this.recordEvent({
       type: "dialogue",
       description: `Spoke with ${character.name}`,
-      playerChoice: playerText.slice(0, 200),
+      playerChoice: spokenText.slice(0, 200),
       outcome: response.dialogue,
       characterIds: [character.id],
     });
-    return { response, character };
+    return { response, character, spokenText };
   }
 
   /** Interact with an object in the current room. */
