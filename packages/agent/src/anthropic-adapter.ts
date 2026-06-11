@@ -13,7 +13,15 @@ export class AnthropicAdapter implements LLMAdapter {
   private readonly client: Anthropic;
 
   constructor(apiKey: string) {
-    this.client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+    // SDK defaults are 10min timeout / 2 retries — a single overloaded retry
+    // reads as a frozen game. Fail fast instead; the engine's transitions are
+    // resumable, so the player just walks right again.
+    this.client = new Anthropic({
+      apiKey,
+      dangerouslyAllowBrowser: true,
+      timeout: 60_000,
+      maxRetries: 1,
+    });
   }
 
   async complete(request: LLMRequest): Promise<string> {

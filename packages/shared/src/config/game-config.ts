@@ -23,6 +23,10 @@ export const GAME_CONFIG = {
     /** Below this age, anything the player says comes out as babble. */
     speechAgeYears: 4,
   },
+  phone: {
+    /** Minimum age to carry a phone. The industrial era never has one. */
+    phoneAgeYears: 13,
+  },
   interaction: {
     /** Sub-tile units. */
     objectInteractRadius: 48,

@@ -282,6 +282,12 @@ export default function App(): JSX.Element {
 
   const engine = engineRef.current;
   const paused = bottom.kind !== "explore" || generating !== null || phone !== null;
+  // No phone for babies (or for 1885): it appears when the player is old
+  // enough to plausibly carry one and the era has them.
+  const hasPhone =
+    context !== null &&
+    context.playerAgeYears >= GAME_CONFIG.phone.phoneAgeYears &&
+    context.era !== "industrial";
 
   const handleInteract = (object: WorldObject): void => {
     if (engine === null || paused) return;
@@ -419,7 +425,7 @@ export default function App(): JSX.Element {
   };
 
   const openPhone = (): void => {
-    if (engine === null || engine.context === null) return;
+    if (engine === null || engine.context === null || !hasPhone) return;
     setPhone("loading");
     void (async () => {
       try {
@@ -470,14 +476,7 @@ export default function App(): JSX.Element {
             {room.label}
           </div>
         )}
-        {generating !== null && (
-          <div style={overlayStyle}>
-            <div style={{ textAlign: "center" }}>
-              <div className="spin" style={{ fontSize: 26 }}>◐</div>
-              <p style={{ fontFamily: "'Courier New', monospace", fontStyle: "italic" }}>{generating}</p>
-            </div>
-          </div>
-        )}
+        {generating !== null && <GeneratingOverlay phase={generating} />}
         {phone !== null && (
           <PhoneOverlay feed={phone} onClose={() => { setPhone(null); }} />
         )}
@@ -529,9 +528,11 @@ export default function App(): JSX.Element {
             <button style={buttonStyle} onClick={() => { setBottom({ kind: "input", purpose: "speak" }); }}>
               Speak [Y]
             </button>
-            <button style={buttonStyle} onClick={openPhone}>
-              Phone [P]
-            </button>
+            {hasPhone && (
+              <button style={buttonStyle} onClick={openPhone}>
+                Phone [P]
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -662,6 +663,30 @@ function NewLifeScreen({ onStart }: { onStart: (name: string, era: Era, birthYea
         Be Born
       </button>
     </Center>
+  );
+}
+
+function GeneratingOverlay({ phase }: { phase: string }): JSX.Element {
+  // After 20s the player deserves to know the API is dragging, not the game
+  // hanging. Calls time out at 60s and the transition is retryable.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    const timer = setTimeout(() => { setSlow(true); }, 20000);
+    return () => { clearTimeout(timer); };
+  }, [phase]);
+  return (
+    <div style={overlayStyle}>
+      <div style={{ textAlign: "center" }}>
+        <div className="spin" style={{ fontSize: 26 }}>◐</div>
+        <p style={{ fontFamily: "'Courier New', monospace", fontStyle: "italic" }}>{phase}</p>
+        {slow && (
+          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 12, color: "#8d889f" }}>
+            (the API is taking its time — hang tight, this gives up at 60s and lets you retry)
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
