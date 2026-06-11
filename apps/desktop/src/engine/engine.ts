@@ -135,15 +135,19 @@ export class GameEngine {
     //    already persisted, so the retry resumes at candidate generation.
     if (room.summary === null && room.exitedAt === null) {
       this.events.onGenerationPhase?.("The moment settles into memory…");
+      // Character updates describe the room being exited, so they take the
+      // PRE-exit context and launch immediately — overlapping compression
+      // AND the candidate chain. They are awaited before the roster read.
+      const preExitContext = this.mustContext();
+      characterWork = this.applyCharacterUpdates(room, preExitContext);
       const { exitedRoom, updatedContext } = await exitRoom(
         room,
-        this.mustContext(),
+        preExitContext,
         (r, c) => compressPlayerMemory(this.adapter, r, c),
         this.db,
       );
       this.currentRoom = exitedRoom;
       this.context = updatedContext;
-      characterWork = this.applyCharacterUpdates(room, updatedContext);
     }
     const context = this.mustContext();
 

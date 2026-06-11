@@ -87,6 +87,30 @@ export default function App(): JSX.Element {
     })();
   }, []);
 
+  // Phone feed prefetch: one Haiku call per room, fired in the background on
+  // entry (only when the player can carry a phone), so opening the phone is
+  // instant instead of a spinner. Cached per room id — reopening is free.
+  const phoneFeedRef = useRef<{ roomId: string; feed: SocialFeedLLMOutput | null } | null>(null);
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (room === null || context === null || engine === null) return;
+    const carriesPhone =
+      context.playerAgeYears >= GAME_CONFIG.phone.phoneAgeYears && context.era !== "industrial";
+    if (!carriesPhone || phoneFeedRef.current?.roomId === room.id) return;
+    phoneFeedRef.current = { roomId: room.id, feed: null };
+    const roster = [...room.objects.values()]
+      .filter((o) => o.characterId !== undefined)
+      .map((o) => o.label);
+    generateSocialFeed(engine.adapter, context, roster)
+      .then((feed) => {
+        if (phoneFeedRef.current?.roomId === room.id) phoneFeedRef.current = { roomId: room.id, feed };
+      })
+      .catch(() => {
+        // Prefetch is best-effort; opening the phone falls back to fetching.
+        if (phoneFeedRef.current?.feed === null) phoneFeedRef.current = null;
+      });
+  }, [room, context]);
+
   const makeEngine = useCallback(
     (kind: "real" | "mock"): GameEngine => {
       const adapter: LLMAdapter =
@@ -426,6 +450,12 @@ export default function App(): JSX.Element {
 
   const openPhone = (): void => {
     if (engine === null || engine.context === null || !hasPhone) return;
+    // Prefetched on room entry — usually instant.
+    const cached = phoneFeedRef.current;
+    if (cached !== null && cached.roomId === room?.id && cached.feed !== null) {
+      setPhone(cached.feed);
+      return;
+    }
     setPhone("loading");
     void (async () => {
       try {
@@ -433,6 +463,7 @@ export default function App(): JSX.Element {
           .filter((o) => o.characterId !== undefined)
           .map((o) => o.label);
         const feed = await generateSocialFeed(engine.adapter, engine.context as LifeContext, roster);
+        if (room !== null) phoneFeedRef.current = { roomId: room.id, feed };
         setPhone(feed);
       } catch {
         setPhone({ posts: [{ authorName: "System", text: "No signal.", likes: 0, postedAgo: "now" }] });
