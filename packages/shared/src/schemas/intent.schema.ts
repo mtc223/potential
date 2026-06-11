@@ -32,10 +32,17 @@ export type PlayerIntentLLMOutput = z.infer<typeof PlayerIntentSchema>;
  * text and bounded state deltas. The harness applies deltas; the LLM proposes.
  */
 export const InteractionResultSchema = z.object({
-  /** What happens — shown in the dialogue box. */
-  outcome: z.string().min(1).max(500),
+  /** What happens — shown in the dialogue box. Overlong narration is clamped,
+   * not rejected: a wordy model must never break an interaction. */
+  outcome: z
+    .string()
+    .min(1)
+    .transform((s) => (s.length > 500 ? `${s.slice(0, 497)}…` : s)),
   /** Player's internal reaction. Hidden stats surface here, never as numbers. */
-  monologue: z.string().max(300).optional(),
+  monologue: z
+    .string()
+    .transform((s) => (s.length > 300 ? `${s.slice(0, 297)}…` : s))
+    .optional(),
   statDeltas: z
     .object({
       hunger: z.number().min(-1).max(1).optional(),

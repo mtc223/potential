@@ -162,6 +162,26 @@ describe("10-room end-to-end smoke test (#15)", () => {
     expect(event.playerChoice).toBe(spokenText.slice(0, 200));
   });
 
+  it("prefers the model's phonetic babble over the local fallback", async () => {
+    await engine.startNewLife(startParams); // newborn — age 0
+    const npc = must(findNpc(currentRoom()), "npc in birth room");
+    const mock = new MockAdapter();
+    engine.adapter.complete = (req): Promise<string> =>
+      req.fn === "character_response"
+        ? Promise.resolve(
+            '{"spokenBabble": "Ma-ma!", "dialogue": "Yes! Mama is right here!", "mood": "melting", "endsConversation": false}',
+          )
+        : mock.complete(req);
+    const { spokenText, response } = await engine.talkTo(npc, "mama");
+    expect(spokenText).toBe("Ma-ma!");
+    expect(response.dialogue).toContain("Mama");
+    const event = must(
+      currentRoom().events.filter((e) => e.type === "dialogue").at(-1),
+      "dialogue event",
+    );
+    expect(event.playerChoice).toBe("Ma-ma!");
+  });
+
   it("records dialogue and interactions as room events that reach compression", async () => {
     await engine.startNewLife(startParams);
     const npc = must(findNpc(currentRoom()), "npc in birth room");

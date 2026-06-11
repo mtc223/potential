@@ -1,6 +1,7 @@
 import {
   GAME_CONFIG,
   babbleize,
+  isPreverbal,
   type CharacterRecord,
   type CharacterResponseLLMOutput,
   type Era,
@@ -212,9 +213,11 @@ export class GameEngine {
   }
 
   /**
-   * Talk to an NPC in the current room. Below the speech age, the typed text
-   * is replaced with babble before it reaches the world — the NPC hears (and
-   * the event records) what actually came out of the player's mouth.
+   * Talk to an NPC in the current room. Below the speech age, the model
+   * receives the INTENDED words, renders them as babble that phonetically
+   * echoes the intent ("mama" comes out nearly right), and the character
+   * responds to what they hear — never the meaning. The local babbleize is
+   * the fallback when the model omits the field (e.g. MockAdapter).
    * `spokenText` is what got said; callers display it, not the input.
    */
   async talkTo(
@@ -231,8 +234,10 @@ export class GameEngine {
       throw new Error(`talkTo: character "${object.label}" missing from roster`);
     }
 
-    const spokenText = babbleize(playerText, context.playerAgeYears);
-    const response = await characterResponse(this.adapter, context, character, spokenText, history);
+    const response = await characterResponse(this.adapter, context, character, playerText, history);
+    const spokenText = isPreverbal(context.playerAgeYears)
+      ? (response.spokenBabble ?? babbleize(playerText, context.playerAgeYears))
+      : playerText;
 
     if (response.affectionDeltas !== undefined) {
       const next = { ...character.affection };

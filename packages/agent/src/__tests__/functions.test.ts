@@ -294,6 +294,37 @@ describe("prompt architecture", () => {
     expect(scene.task).not.toContain("Moment number 0.");
   });
 
+  it("overlong interaction outcomes clamp instead of failing the interaction", async () => {
+    const wordy: LLMAdapter = {
+      complete: () =>
+        Promise.resolve(JSON.stringify({ outcome: "x".repeat(900), monologue: "y".repeat(500) })),
+    };
+    const target = { id: "obj_1" as const, category: "fixture" as const, label: "Couch", description: "d", tags: [], tombstoned: false };
+    const result = await interactionResult(wordy, makeContext(), makeRoom(), target, "examine");
+    expect(result.outcome.length).toBeLessThanOrEqual(500);
+    expect(result.outcome.endsWith("…")).toBe(true);
+    expect(result.monologue?.length).toBeLessThanOrEqual(300);
+  });
+
+  it("pre-verbal players get the babble translation directive; adults do not", async () => {
+    const systems: string[] = [];
+    const spy: LLMAdapter = {
+      complete: (req: LLMRequest) => {
+        systems.push(req.system.task);
+        return Promise.resolve(
+          '{"spokenBabble": "Ma-ma!", "dialogue": "Oh! Hi sweet girl!", "mood": "delighted", "endsConversation": false}',
+        );
+      },
+    };
+    const baby = makeContext({ playerAgeYears: 1 });
+    const response = await characterResponse(spy, baby, makeCharacter(), "mama");
+    expect(systems[0]).toContain("PRE-VERBAL");
+    expect(response.spokenBabble).toBe("Ma-ma!");
+
+    await characterResponse(spy, makeContext({ playerAgeYears: 30 }), makeCharacter(), "hello");
+    expect(systems[1]).not.toContain("PRE-VERBAL");
+  });
+
   it("passes player text through sanitization in character_response", async () => {
     const captured: string[] = [];
     const spy: LLMAdapter = {

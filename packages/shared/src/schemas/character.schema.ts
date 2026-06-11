@@ -6,6 +6,10 @@ import { MediumText, ShortText, UnitFloat } from "./common.schema.js";
  */
 export const CharacterResponseSchema = z.object({
   dialogue: z.string().min(1).max(300),
+  /** Pre-verbal player only: their intended words rendered as babble that
+   * phonetically echoes the intent ("mama" stays nearly recognizable).
+   * This is what the character hears and what the event log records. */
+  spokenBabble: z.string().min(1).max(200).optional(),
   /** Updated surface mood after this exchange, e.g. 'amused', 'guarded'. */
   mood: ShortText,
   /** Small relationship movements from this exchange. Deltas, -0.2 to 0.2. */

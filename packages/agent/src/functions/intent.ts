@@ -68,6 +68,7 @@ TARGET: ${target.label} — ${target.description}
 ACTION: ${action}
 
 Rules:
+- outcome: 1–3 sentences, under 400 characters. monologue: one sentence.
 - Outcomes are grounded and proportionate: examining a couch finds coins, not treasure.
 - statDeltas only when the interaction genuinely affects hunger/health/money. Most interactions move nothing.
 - behavioralTags only when this evidences a recurring pattern (e.g. 'generosity', 'defiance').

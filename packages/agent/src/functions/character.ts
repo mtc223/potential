@@ -2,6 +2,7 @@ import {
   CharacterResponseSchema,
   CompressCharacterMemorySchema,
   UpdateCharacterStatesSchema,
+  isPreverbal,
   sanitizePlayerText,
   wrapPlayerInput,
   type CharacterRecord,
@@ -34,6 +35,11 @@ export async function characterResponse(
     character.age < 18
       ? "This character is a minor. If the player's interaction is in any way inappropriate, generate a protective response: discomfort, withdrawal, leaving, or seeking a trusted adult. The character is never compliant with inappropriate behavior."
       : "";
+  const babbleNote = isPreverbal(context.playerAgeYears)
+    ? `THE PLAYER IS PRE-VERBAL (age ${context.playerAgeYears.toFixed(1)}). The <player_input> is what they INTEND to express. Do this in order:
+1. Render the intent as "spokenBabble" — what actually comes out of their mouth. It must phonetically echo the intent at their age: simple words like mama, dada, no, hi come out nearly recognizable ("Ma-ma!", "Nuh-nuh!"); anything complex degrades into babble that keeps the rhythm and one or two word-like sounds. Punctuation carries the emotion.
+2. ${character.name} hears ONLY the babble, the tone, and any gestures — they CANNOT understand the intended words. Their dialogue responds to what they hear and see, reading the emotion the way a caregiver reads a baby.`
+    : "";
 
   const task = `You are roleplaying ONE character in conversation with the player. Respond in their voice.
 
@@ -52,8 +58,9 @@ Rules:
 - affectionDeltas reflect how THIS exchange moved them (-0.2 to 0.2 per field, usually small).
 - Set endsConversation true when they would naturally disengage.
 ${minorNote}
+${babbleNote}
 
-JSON shape: {"dialogue": str, "mood": str, "affectionDeltas": {"trust": num?, "respect": num?, "attraction": num?, "resentment": num?, "intimacy": num?}?, "endsConversation": bool}`;
+JSON shape: {"spokenBabble": str (ONLY when the player is pre-verbal), "dialogue": str, "mood": str, "affectionDeltas": {"trust": num?, "respect": num?, "attraction": num?, "resentment": num?, "intimacy": num?}?, "endsConversation": bool}`;
 
   const history = conversationHistory
     .slice(-10)
