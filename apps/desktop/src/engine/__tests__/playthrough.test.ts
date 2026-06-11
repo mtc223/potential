@@ -109,6 +109,34 @@ describe("10-room end-to-end smoke test (#15)", () => {
     }
   });
 
+  it("resumes a transition that failed after the exit was persisted", async () => {
+    await engine.startNewLife(startParams);
+    const birthId = currentRoom().id;
+
+    // Adapter that dies on room fabrication once, then recovers.
+    const mock = new MockAdapter();
+    let failures = 1;
+    engine.adapter.complete = (req): Promise<string> => {
+      if (req.fn === "prompt_room" && failures > 0) {
+        failures -= 1;
+        return Promise.reject(new Error("simulated API outage"));
+      }
+      return mock.complete(req);
+    };
+
+    await expect(engine.transition()).rejects.toThrow("simulated API outage");
+    // The exit persisted: in-memory room is marked exited, context advanced.
+    expect(currentRoom().id).toBe(birthId);
+    expect(currentRoom().exitedAt).not.toBeNull();
+    expect(must(await loadLifeContext(db), "ctx").compressedHistory).toHaveLength(1);
+
+    // Retry resumes at candidate generation — no double exit, one new room.
+    const next = await engine.transition();
+    expect(next.sequenceIndex).toBe(1);
+    expect(next.previousRoomId).toBe(birthId);
+    expect(must(await loadLifeContext(db), "ctx").compressedHistory).toHaveLength(1);
+  });
+
   it("records dialogue and interactions as room events that reach compression", async () => {
     await engine.startNewLife(startParams);
     const npc = must(findNpc(currentRoom()), "npc in birth room");

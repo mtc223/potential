@@ -127,7 +127,12 @@ export default function App(): JSX.Element {
         if (error instanceof LifeEndedError) {
           setScreen({ kind: "dead", context: error.finalContext });
         } else {
-          pushMonologue(`Something went wrong: ${error instanceof Error ? error.message : "unknown"}`);
+          pushMonologue(`Something went wrong: ${error instanceof Error ? error.message : "unknown"}. Walk right to try again.`);
+          // Remount the canvas with a fresh room reference so exit detection
+          // rearms — engine.transition resumes from where it failed.
+          const current = engineRef.current?.currentRoom;
+          if (current !== null && current !== undefined) setRoom({ ...current });
+          setContext(engineRef.current?.context ?? null);
         }
       } finally {
         setGenerating(null);

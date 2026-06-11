@@ -122,52 +122,57 @@ export class GameEngine {
    */
   async transition(intentSignal?: string): Promise<Room> {
     const room = this.mustRoom();
-    const context = this.mustContext();
 
     // 1. Compress and persist the exited room (harness enforces ordering).
-    this.events.onGenerationPhase?.("The moment settles into memory…");
-    const { updatedContext } = await exitRoom(
-      room,
-      context,
-      (r, c) => compressPlayerMemory(this.adapter, r, c),
-      this.db,
-    );
-    this.context = updatedContext;
+    //    Skipped when re-entering after a mid-flight failure: the exit is
+    //    already persisted, so the retry resumes at candidate generation.
+    if (room.summary === null && room.exitedAt === null) {
+      this.events.onGenerationPhase?.("The moment settles into memory…");
+      const { exitedRoom, updatedContext } = await exitRoom(
+        room,
+        this.mustContext(),
+        (r, c) => compressPlayerMemory(this.adapter, r, c),
+        this.db,
+      );
+      this.currentRoom = exitedRoom;
+      this.context = updatedContext;
 
-    // 2. Characters who shared the room update silently.
-    const present = await this.presentCharacters(room);
-    if (present.length > 0) {
-      const { updates } = await updateCharacterStates(this.adapter, updatedContext, room, present);
-      for (const update of updates) {
-        const match = present.find((c) => c.name.toLowerCase() === update.name.toLowerCase());
-        if (match === undefined) continue;
-        await upsertCharacter(
-          {
-            ...match,
-            emotionalState: update.emotionalState,
-            intent: update.intent,
-            affection: this.guardAffection(match, update.affection, updatedContext),
-          },
-          this.db,
-        );
+      // 2. Characters who shared the room update silently.
+      const present = await this.presentCharacters(room);
+      if (present.length > 0) {
+        const { updates } = await updateCharacterStates(this.adapter, updatedContext, room, present);
+        for (const update of updates) {
+          const match = present.find((c) => c.name.toLowerCase() === update.name.toLowerCase());
+          if (match === undefined) continue;
+          await upsertCharacter(
+            {
+              ...match,
+              emotionalState: update.emotionalState,
+              intent: update.intent,
+              affection: this.guardAffection(match, update.affection, updatedContext),
+            },
+            this.db,
+          );
+        }
       }
     }
+    const context = this.mustContext();
 
     // 3. Death check — the world decides, the engine enforces.
-    if (updatedContext.health <= 0) {
+    if (context.health <= 0) {
       this.context = await endLife("their body gave out", this.db);
       throw new LifeEndedError("Health reached zero", this.context);
     }
 
     // 4. Candidates → selection → fabrication.
     this.events.onGenerationPhase?.("Possible futures take shape…");
-    const { candidates } = await generateCandidates(this.adapter, updatedContext, intentSignal);
-    const chosen = await selectCandidate(this.adapter, updatedContext, candidates);
+    const { candidates } = await generateCandidates(this.adapter, context, intentSignal);
+    const chosen = await selectCandidate(this.adapter, context, candidates);
 
     this.events.onGenerationPhase?.("The next room assembles itself…");
     const roster = await getActiveCharacters(this.db);
-    const output = await promptRoom(this.adapter, updatedContext, chosen, roster);
-    const built = buildRoom(output, chosen, updatedContext, room, roster);
+    const output = await promptRoom(this.adapter, context, chosen, roster);
+    const built = buildRoom(output, chosen, context, this.mustRoom(), roster);
     await this.persistUpserts(built.characterUpserts);
 
     this.currentRoom = built.room;

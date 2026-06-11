@@ -26,6 +26,7 @@ Rules:
 - Mix mundane continuity with at least one possibility of change or disruption.
 - Weight (0-1) = how strongly life is currently pulling toward this concept.
 - Duration reflects narrative density: crises slow to days, routine compresses to months/years.
+- KEEP LIFE MOVING. If the last 2+ rooms covered the same life-period (same routine, same stakes), at least half the candidates must jump forward — months or a year — to the next distinct chapter (first steps, first words, daycare, a sibling, a move). A life is a handful of vivid scenes, not an exhaustive diary.
 - Respect pacing preference: 'slow' favors shorter durations, 'fast' favors longer.
 ${intentSignal !== undefined ? `- The player has signaled intent: "${intentSignal}". Weight at least one matching candidate strongly.` : ""}
 
