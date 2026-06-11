@@ -92,10 +92,13 @@ export function advanceContext(
   const days = ROOM_DURATION_DAYS[room.duration];
   const { life } = GAME_CONFIG;
 
-  const hunger = Math.max(
+  const drained = Math.max(
     life.minHungerAfterRoom,
     context.hunger - life.hungerDrainPerDay * Math.min(days, life.hungerDrainMaxDays),
   );
+  // Week+ rooms include routine off-screen meals; only day-resolution rooms
+  // (crisis zooms, where the player can actually eat) drain below the floor.
+  const hunger = days >= life.offScreenMealDays ? Math.max(drained, life.offScreenMealFloor) : drained;
 
   let healthDecay = life.healthDecayPerYear * (days / 365);
   if (hunger <= life.starvationThreshold) {

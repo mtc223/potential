@@ -49,13 +49,21 @@ export const GAME_CONFIG = {
   life: {
     /** Health decay per room-year of elapsed time (scaled by duration). */
     healthDecayPerYear: 0.02,
-    /** Extra decay multiplier when hunger is below the starvation threshold. */
+    /** Extra decay when hunger is at/below the starvation threshold on room exit. */
     starvationThreshold: 0.15,
-    starvationHealthDecay: 0.1,
+    starvationHealthDecay: 0.05,
     /** Hunger drain per day of room duration (capped at hungerDrainMaxDays). */
     hungerDrainPerDay: 0.15,
     /** Long rooms imply off-screen meals — drain at most this many days' worth. */
     hungerDrainMaxDays: 3,
+    /**
+     * Rooms spanning at least this many days include routine off-screen meals:
+     * hunger floors at offScreenMealFloor. Starvation pressure comes from
+     * consecutive day-resolution rooms (crises) and LLM-driven events, not the
+     * baseline clock — "pressure yes, death spiral no".
+     */
+    offScreenMealDays: 7,
+    offScreenMealFloor: 0.6,
     /** Hunger floor per room — a room never drains below this on its own. */
     minHungerAfterRoom: 0.05,
     /** Age in years past which natural-death weighting begins. */

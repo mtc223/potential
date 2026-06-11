@@ -130,11 +130,19 @@ describe("advanceContext — world clock and survival ticks", () => {
   });
 
   it("decays health faster when starving", () => {
-    const room = makeRoom({ duration: "week" });
+    const room = makeRoom({ duration: "day" });
     const fed = advanceContext(makeLifeContext({ hunger: 1 }), room, makeCompressed(room));
     const starving = advanceContext(makeLifeContext({ hunger: 0.06 }), room, makeCompressed(room));
 
     expect(starving.health).toBeLessThan(fed.health);
+  });
+
+  it("week+ rooms include off-screen meals — hunger floors at the meal baseline", () => {
+    const room = makeRoom({ duration: "month" });
+    const context = makeLifeContext({ hunger: 0.1 });
+
+    const advanced = advanceContext(context, room, makeCompressed(room));
+    expect(advanced.hunger).toBeGreaterThanOrEqual(0.6);
   });
 
   it("clamps health at 0", () => {
