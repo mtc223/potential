@@ -7,4 +7,6 @@ export * from "./types/player.js";
 export * from "./types/character.js";
 export * from "./types/life-context.js";
 export * from "./config/game-config.js";
+export * from "./assets/asset-catalog.js";
+export * from "./security/sanitize.js";
 export * from "./schemas/index.js";
