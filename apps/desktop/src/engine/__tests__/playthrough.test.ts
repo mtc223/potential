@@ -109,6 +109,20 @@ describe("10-room end-to-end smoke test (#15)", () => {
     }
   });
 
+  it("a failed silent character update never aborts the transition", async () => {
+    await engine.startNewLife(startParams);
+    const mock = new MockAdapter();
+    engine.adapter.complete = (req): Promise<string> =>
+      req.fn === "update_character_state"
+        ? Promise.reject(new Error("character update outage"))
+        : mock.complete(req);
+
+    // Character updates run concurrently with candidate selection; their
+    // failure degrades gracefully instead of rejecting the transition.
+    const next = await engine.transition();
+    expect(next.sequenceIndex).toBe(1);
+  });
+
   it("resumes a transition that failed after the exit was persisted", async () => {
     await engine.startNewLife(startParams);
     const birthId = currentRoom().id;

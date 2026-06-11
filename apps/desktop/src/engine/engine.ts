@@ -75,7 +75,7 @@ export class GameEngine {
 
     const birthCandidate = {
       concept: "Birth",
-      premise: `${params.playerName} is born. A hospital room, bright lights, the first cry. The parents are present.`,
+      premise: `${params.playerName} is born. A hospital room, bright lights, the first cry. BOTH parents are present as named cast characters — give them names and a warmth or tension that seeds this family's dynamic.`,
       duration: "day" as const,
       weight: 1,
     };
@@ -119,10 +119,16 @@ export class GameEngine {
 
   /**
    * The room transition — the heart of the game.
-   * Compression fires first; its output is the freshest signal for selection.
+   *
+   * Call graph (latency-shaped): compression MUST finish before candidate
+   * generation (its output is the freshest selection signal — hard
+   * constraint), and candidates → select → prompt_room is an inherent chain.
+   * But the silent character updates depend only on the exited room, so they
+   * run CONCURRENTLY with the candidate chain instead of in front of it.
    */
   async transition(intentSignal?: string): Promise<Room> {
     const room = this.mustRoom();
+    let characterWork: Promise<void> | null = null;
 
     // 1. Compress and persist the exited room (harness enforces ordering).
     //    Skipped when re-entering after a mid-flight failure: the exit is
@@ -137,39 +143,24 @@ export class GameEngine {
       );
       this.currentRoom = exitedRoom;
       this.context = updatedContext;
-
-      // 2. Characters who shared the room update silently.
-      const present = await this.presentCharacters(room);
-      if (present.length > 0) {
-        const { updates } = await updateCharacterStates(this.adapter, updatedContext, room, present);
-        for (const update of updates) {
-          const match = present.find((c) => c.name.toLowerCase() === update.name.toLowerCase());
-          if (match === undefined) continue;
-          await upsertCharacter(
-            {
-              ...match,
-              emotionalState: update.emotionalState,
-              intent: update.intent,
-              affection: this.guardAffection(match, update.affection, updatedContext),
-            },
-            this.db,
-          );
-        }
-      }
+      characterWork = this.applyCharacterUpdates(room, updatedContext);
     }
     const context = this.mustContext();
 
-    // 3. Death check — the world decides, the engine enforces.
+    // 2. Death check — the world decides, the engine enforces.
     if (context.health <= 0) {
       this.context = await endLife("their body gave out", this.db);
       throw new LifeEndedError("Health reached zero", this.context);
     }
 
-    // 4. Candidates → selection → fabrication.
+    // 3. Candidates → selection, with character updates riding alongside.
     this.events.onGenerationPhase?.("Possible futures take shape…");
-    const { candidates } = await generateCandidates(this.adapter, context, intentSignal);
-    const chosen = await selectCandidate(this.adapter, context, candidates);
+    const selectionWork = generateCandidates(this.adapter, context, intentSignal).then(
+      ({ candidates }) => selectCandidate(this.adapter, context, candidates),
+    );
+    const [chosen] = await Promise.all([selectionWork, characterWork ?? Promise.resolve()]);
 
+    // 4. Fabrication — roster read AFTER character updates persist.
     this.events.onGenerationPhase?.("The next room assembles itself…");
     const roster = await getActiveCharacters(this.db);
     const output = await promptRoom(this.adapter, context, chosen, roster);
@@ -180,6 +171,35 @@ export class GameEngine {
     this.roomEntryAt = Date.now();
     this.events.onMonologue?.(output.openingMonologue);
     return built.room;
+  }
+
+  /**
+   * Silent post-room character updates. Non-fatal by design: a failure here
+   * means stale emotional states that self-correct next room, never an
+   * aborted transition (also keeps Promise.all from leaking a rejection
+   * when the selection chain throws first).
+   */
+  private async applyCharacterUpdates(room: Room, context: LifeContext): Promise<void> {
+    try {
+      const present = await this.presentCharacters(room);
+      if (present.length === 0) return;
+      const { updates } = await updateCharacterStates(this.adapter, context, room, present);
+      for (const update of updates) {
+        const match = present.find((c) => c.name.toLowerCase() === update.name.toLowerCase());
+        if (match === undefined) continue;
+        await upsertCharacter(
+          {
+            ...match,
+            emotionalState: update.emotionalState,
+            intent: update.intent,
+            affection: this.guardAffection(match, update.affection, context),
+          },
+          this.db,
+        );
+      }
+    } catch {
+      // Degrade gracefully — see doc comment.
+    }
   }
 
   /** Free-text player input → structured intent. */

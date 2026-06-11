@@ -44,9 +44,10 @@ Rules:
 - "situation" is shown to the player as opening narration — write it as 1–3 vivid sentences of present-tense scene-setting with stakes or tension. It is the story beat of this room.
 - Entry is on the left wall, exit on the right, both at mid-height. Do not place objects on column 0 or the last column, and keep the middle rows next to both doors clear of solid objects.
 - Choose asset ids ONLY from the vocabulary below. Never invent ids.
-- FURNISH THE ROOM FULLY. A lived-in room needs 10–20 objects (tiny/small rooms: 8–14). Push furniture against the top wall and side walls, cluster related objects (chair at table, lamp by couch, plant in corner), and leave a walkable path from the left door to the right door. Empty floor reads as unfinished — fill it.
+- FURNISH THE ROOM FULLY. A lived-in room needs 9–14 objects (tiny/small rooms: 7–10). Push furniture against the top wall and side walls, cluster related objects (chair at table, lamp by couch, plant in corner), and leave a walkable path from the left door to the right door. Empty floor reads as unfinished — fill it.
 - Pick the SMALLEST size template that fits the scene. Intimate scenes (bedroom, office, kitchen) are tiny/small; only public spaces (school, street, party) justify large/wide.
-- Give story-relevant objects interactions with evocative "examine" text that rewards curiosity; set dressing can omit them.
+- Give 3–5 story-relevant objects an interaction with evocative "examine" text (≤ 25 words) that rewards curiosity; everything else is set dressing with NO interaction.
+- BE TERSE — this JSON renders a game frame, not prose. Object descriptions ≤ 8 words. Character personality/backstory/intent: one tight phrase each. Spend your words on "situation" and "openingMonologue"; compress everything else.
 - Cast 0–4 characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people. NEVER cast the player — their sprite is rendered by the engine.
 - Every character gets a DIFFERENT assetId — never two characters with the same sprite. Match sprite to role and age (variants _b/_c/_d are different outfits/looks of the same archetype).
 - The opening monologue is the player's inner voice: let their nature stats color it without ever naming numbers or stats.
@@ -76,7 +77,7 @@ JSON shape:
       model: "sonnet",
       system: buildSystemPrompt(task, context, extra),
       user: "Generate the room now. JSON only.",
-      maxTokens: 6000,
+      maxTokens: 3500,
     },
     RoomSchema,
   );

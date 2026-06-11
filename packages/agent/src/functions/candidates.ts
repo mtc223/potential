@@ -19,7 +19,7 @@ export async function generateCandidates(
   context: LifeContext,
   intentSignal?: string,
 ): Promise<CandidatesLLMOutput> {
-  const task = `Propose 4-8 candidate concepts for the NEXT room of this life.
+  const task = `Propose 4-6 candidate concepts for the NEXT room of this life. Keep premises under 20 words.
 
 Rules:
 - Candidates must follow causally from the recent history and the player's age/stage. The most recent compressed room is the freshest signal.
@@ -39,7 +39,7 @@ JSON shape: {"candidates": [{"concept": str, "premise": str, "duration": "day|we
       model: "haiku",
       system: buildSystemPrompt(task, context),
       user: "Generate candidates now. JSON only.",
-      maxTokens: 1500,
+      maxTokens: 1000,
     },
     CandidatesSchema,
   );
