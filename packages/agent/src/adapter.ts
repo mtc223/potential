@@ -23,10 +23,25 @@ export type LLMFunctionName =
 
 export type ModelTier = "sonnet" | "haiku";
 
+/**
+ * System prompt as stability-ordered blocks. AnthropicAdapter places a cache
+ * breakpoint after `core` and after `history`; `task` is never cached.
+ * Caches are per-model, so every Haiku call in a session shares the same
+ * `core` prefix, and the in-room call burst reuses `history` for free.
+ */
+export interface SystemSpec {
+  /** Safety preamble + age tier + immutable identity. Changes ~4x per life. */
+  core: string;
+  /** Life events + recent rooms. Append-only; changes once per transition. Empty for scene-view calls. */
+  history: string;
+  /** Now-state + task instructions + per-call context. Always fresh. */
+  task: string;
+}
+
 export interface LLMRequest {
   fn: LLMFunctionName;
   model: ModelTier;
-  system: string;
+  system: SystemSpec;
   user: string;
   maxTokens: number;
   temperature?: number;

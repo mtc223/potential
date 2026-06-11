@@ -32,11 +32,23 @@ export class AnthropicAdapter implements LLMAdapter {
       );
     }
 
+    // Stability-ordered system blocks with cache breakpoints: core (changes
+    // ~4x/life) and history (changes once per room) are cached; the in-room
+    // burst of calls — dialogue, interactions, the exit pipeline — rereads
+    // them at ~10% input cost. Task/now-state stays uncached.
+    const system: Anthropic.TextBlockParam[] = [
+      { type: "text", text: request.system.core, cache_control: { type: "ephemeral" } },
+    ];
+    if (request.system.history.length > 0) {
+      system.push({ type: "text", text: request.system.history, cache_control: { type: "ephemeral" } });
+    }
+    system.push({ type: "text", text: request.system.task });
+
     const response = await this.client.messages.create({
       model: resolveModel(request.model),
       max_tokens: request.maxTokens,
       temperature: request.temperature ?? 1,
-      system: request.system,
+      system,
       messages: [{ role: "user", content: request.user }],
     });
 

@@ -11,7 +11,7 @@ import {
 } from "@potential/shared";
 import { MockAdapter } from "../mock-adapter.js";
 import { callValidated } from "../call.js";
-import { buildSystemPrompt, serializeLifeContext } from "../prompts/preamble.js";
+import { buildSystemPrompt } from "../prompts/preamble.js";
 import {
   promptRoom,
   generateCandidates,
@@ -210,7 +210,7 @@ describe("callValidated retry behavior", () => {
         );
       },
     };
-    const request: LLMRequest = { fn: "select_candidate", model: "haiku", system: "s", user: "u", maxTokens: 100 };
+    const request: LLMRequest = { fn: "select_candidate", model: "haiku", system: { core: "s", history: "", task: "t" }, user: "u", maxTokens: 100 };
     const result = await callValidated(flaky, request, SelectCandidateSchema, 1);
     expect(result.selectedIndex).toBe(1);
     expect(calls).toBe(2);
@@ -218,7 +218,7 @@ describe("callValidated retry behavior", () => {
 
   it("throws LLMValidationError after exhausting retries", async () => {
     const broken: LLMAdapter = { complete: () => Promise.resolve("garbage") };
-    const request: LLMRequest = { fn: "select_candidate", model: "haiku", system: "s", user: "u", maxTokens: 100 };
+    const request: LLMRequest = { fn: "select_candidate", model: "haiku", system: { core: "s", history: "", task: "t" }, user: "u", maxTokens: 100 };
     await expect(callValidated(broken, request, SelectCandidateSchema, 1)).rejects.toThrow(
       LLMValidationError,
     );
@@ -226,20 +226,30 @@ describe("callValidated retry behavior", () => {
 });
 
 describe("prompt architecture", () => {
-  it("places the safety preamble first in every system prompt", () => {
+  it("places the safety preamble first, before any task instructions", () => {
     const system = buildSystemPrompt("Do the task.", makeContext());
-    expect(system.indexOf("PROHIBITED")).toBeGreaterThan(-1);
-    expect(system.indexOf("PROHIBITED")).toBeLessThan(system.indexOf("Do the task."));
+    expect(system.core.indexOf("PROHIBITED")).toBeGreaterThan(-1);
+    expect(system.core).not.toContain("Do the task.");
+    expect(system.task).toContain("Do the task.");
   });
 
   it("includes the age tier matching the player's age", () => {
-    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 3 }))).toContain("AGE TIER (0–5)");
-    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 9 }))).toContain("AGE TIER (5–12)");
-    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 15 }))).toContain("AGE TIER (13–17)");
-    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 30 }))).toContain("AGE TIER (18+)");
+    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 3 })).core).toContain("AGE TIER (0–5)");
+    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 9 })).core).toContain("AGE TIER (5–12)");
+    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 15 })).core).toContain("AGE TIER (13–17)");
+    expect(buildSystemPrompt("t", makeContext({ playerAgeYears: 30 })).core).toContain("AGE TIER (18+)");
   });
 
-  it("serializes life events and recent history into context", () => {
+  it("keeps volatile stats out of the cached blocks", () => {
+    const a = buildSystemPrompt("t", makeContext({ hunger: 0.9, money: 100 }));
+    const b = buildSystemPrompt("t", makeContext({ hunger: 0.1, money: 9000 }));
+    // Stat changes must never invalidate the cacheable core/history prefix.
+    expect(a.core).toBe(b.core);
+    expect(a.history).toBe(b.history);
+    expect(a.task).not.toBe(b.task);
+  });
+
+  it("serializes life events and recent history into the full view only", () => {
     const context = makeContext({
       lifeEvents: [
         {
@@ -256,9 +266,32 @@ describe("prompt architecture", () => {
         },
       ],
     });
-    const serialized = serializeLifeContext(context);
-    expect(serialized).toContain("Born on a rainy Tuesday.");
-    expect(serialized).toContain("LIFE EVENTS");
+    const full = buildSystemPrompt("t", context);
+    expect(full.history).toContain("Born on a rainy Tuesday.");
+    expect(full.history).toContain("LIFE EVENTS");
+
+    const scene = buildSystemPrompt("t", context, "", "scene");
+    expect(scene.history).toBe("");
+    expect(scene.core).toContain("PROHIBITED");
+  });
+
+  it("scene view carries the last few room narratives in the now-state", () => {
+    const summary = (i: number): LifeContext["compressedHistory"][number] => ({
+      roomId: `room_${String(i)}`,
+      sequenceIndex: i,
+      narrative: `Moment number ${String(i)}.`,
+      behavioralSignal: "s",
+      tags: [],
+      emotionalValence: 0,
+      isLifeEvent: false,
+      milestone: null,
+      playerAgeYears: i,
+      worldDate: "1990-01-01",
+    });
+    const context = makeContext({ compressedHistory: [0, 1, 2, 3, 4].map(summary) });
+    const scene = buildSystemPrompt("t", context, "", "scene");
+    expect(scene.task).toContain("Moment number 4.");
+    expect(scene.task).not.toContain("Moment number 0.");
   });
 
   it("passes player text through sanitization in character_response", async () => {
@@ -326,7 +359,7 @@ describe("prompt_room post-validation", () => {
     let objectVocabulary = "";
     const recorder: LLMAdapter = {
       complete: (req: LLMRequest) => {
-        objectVocabulary = /Objects: ([^\n]*)/.exec(req.system)?.[1] ?? "";
+        objectVocabulary = /Objects: ([^\n]*)/.exec(req.system.task)?.[1] ?? "";
         return Promise.resolve(JSON.stringify(craftedRoom));
       },
     };

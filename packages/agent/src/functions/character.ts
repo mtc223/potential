@@ -67,7 +67,7 @@ JSON shape: {"dialogue": str, "mood": str, "affectionDeltas": {"trust": num?, "r
     {
       fn: "character_response",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user,
       maxTokens: 400,
     },
@@ -120,7 +120,7 @@ JSON shape: {"updates": [{"name": str, "emotionalState": str, "intent": str, "af
     {
       fn: "update_character_state",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: "Update all characters now. JSON only.",
       maxTokens: 1500,
     },
@@ -151,7 +151,7 @@ JSON shape: {"memorySummary": str}`;
     {
       fn: "compress_character_memory",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: "Compress now. JSON only.",
       maxTokens: 400,
     },

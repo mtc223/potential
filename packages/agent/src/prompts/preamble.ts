@@ -1,13 +1,33 @@
 import type { LifeContext } from "@potential/shared";
+import type { SystemSpec } from "../adapter.js";
 
 /**
- * Prompt architecture (SecurityDesign §2.2): every system prompt is assembled
- * programmatically in this fixed order. The safety preamble is ALWAYS first.
- * Nothing precedes it. Player input never enters the system prompt.
+ * Prompt architecture (SecurityDesign §2.2) + caching strategy.
  *
- *   [1] Safety preamble (immutable, hardcoded here)
- *   [2] Task instructions (per function)
- *   [4] Game context (from the harness, serialized)
+ * Every system prompt is assembled programmatically into three blocks,
+ * ordered by stability so Anthropic prompt caching gets maximal prefix reuse:
+ *
+ *   [core]    Safety preamble + age tier + immutable identity.
+ *             Identical for EVERY call on a model until the age tier changes
+ *             (4 times per life). Cached.
+ *   [history] Life events + recent room history. Append-only; changes once
+ *             per room transition. Cached. Only "full"-view functions carry
+ *             it — light functions skip it entirely and still share the core
+ *             cache prefix.
+ *   [task]    Now-state (stats that move every interaction) + task
+ *             instructions + per-call context. Never cached; instructions
+ *             sit last for recency.
+ *
+ * The safety preamble is ALWAYS first; nothing precedes it. Player input
+ * never enters the system prompt.
+ *
+ * Context views — "really only use the important stuff":
+ *   full  → prompt_room, generate_candidates, select_candidate,
+ *           compress_player_memory. These shape the life and need its arc.
+ *   scene → everything else (dialogue, interactions, intent, surfaces).
+ *           They act within one moment: identity + now-state + the last few
+ *           room narratives. An intent classifier does not need your
+ *           childhood.
  */
 
 const SAFETY_PREAMBLE = `You are the world-engine of a life simulation game. Honest simulation, hard lines.
@@ -42,35 +62,45 @@ function ageTierRules(ageYears: number): string {
   return "PLAYER AGE TIER (18+): full palette except the prohibited list. Consent and willingness are prerequisites for any intimate content; fade to black always.";
 }
 
+export type ContextView = "full" | "scene";
+
+const FULL_HISTORY_ROOMS = 12;
+const SCENE_HISTORY_ROOMS = 3;
+
 export function buildSystemPrompt(
   taskInstructions: string,
   context: LifeContext,
   extraContext = "",
-): string {
-  return [
-    SAFETY_PREAMBLE,
-    ageTierRules(context.playerAgeYears),
-    "── TASK ──",
-    taskInstructions,
-    "── LIFE CONTEXT ──",
-    serializeLifeContext(context),
+  view: ContextView = "full",
+): SystemSpec {
+  const core = [SAFETY_PREAMBLE, ageTierRules(context.playerAgeYears), serializeIdentity(context)].join("\n\n");
+  const history = view === "full" ? serializeLifeHistory(context) : "";
+  const task = [
+    `── NOW ──\n${serializeNowState(context, view)}`,
+    `── TASK ──\n${taskInstructions}`,
     extraContext.length > 0 ? `── ADDITIONAL CONTEXT ──\n${extraContext}` : "",
   ]
     .filter((s) => s.length > 0)
     .join("\n\n");
+  return { core, history, task };
 }
 
-/** Serialize LifeContext within a sane token budget: all LifeEvents + recent history. */
-export function serializeLifeContext(context: LifeContext): string {
-  const recent = context.compressedHistory.slice(-20);
-  const lines: string[] = [
-    `Player: ${context.playerName}, age ${context.playerAgeYears.toFixed(1)}, ${context.era} era. World date: ${context.worldDate}.`,
-    `Health: ${describeBar(context.health)}. Hunger: ${describeBar(context.hunger)}. Money: $${String(Math.round(context.money))}. Job: ${context.jobTitle ?? "none"}.`,
-    `Nature (innate, hidden from player): curiosity ${String(context.natureStats.curiosity)}, resilience ${String(context.natureStats.resilience)}, empathy ${String(context.natureStats.empathy)}, ambition ${String(context.natureStats.ambition)}, creativity ${String(context.natureStats.creativity)} (0–100).`,
-    `Behavioral patterns: ${context.behavioralPatterns.length > 0 ? context.behavioralPatterns.join(", ") : "none yet"}.`,
-    `Pacing preference: ${context.pacing}.`,
-  ];
+/** Immutable for the whole life — safe in the long-lived cache prefix. */
+function serializeIdentity(context: LifeContext): string {
+  const n = context.natureStats;
+  return [
+    `PLAYER IDENTITY: ${context.playerName}, born ${context.birthDate}, ${context.era} era.`,
+    `Nature (innate, hidden from player, 0–100): curiosity ${String(n.curiosity)}, resilience ${String(n.resilience)}, empathy ${String(n.empathy)}, ambition ${String(n.ambition)}, creativity ${String(n.creativity)}.`,
+  ].join("\n");
+}
 
+/**
+ * The life's arc: every life event + recent room history. Append-only, so it
+ * changes exactly once per room transition — the cache block survives the
+ * whole in-room burst of calls. Exported for tests.
+ */
+export function serializeLifeHistory(context: LifeContext): string {
+  const lines: string[] = [];
   if (context.lifeEvents.length > 0) {
     lines.push(
       "LIFE EVENTS (permanent anchors):",
@@ -79,15 +109,33 @@ export function serializeLifeContext(context: LifeContext): string {
       ),
     );
   }
+  const recent = context.compressedHistory.slice(-FULL_HISTORY_ROOMS);
   if (recent.length > 0) {
     lines.push(
       `RECENT HISTORY (last ${String(recent.length)} rooms):`,
       ...recent.map((e) => `  [age ${e.playerAgeYears.toFixed(1)}] ${e.narrative} — ${e.behavioralSignal}`),
     );
   }
+  return lines.join("\n");
+}
+
+/** Everything that moves between calls — kept out of the cached blocks. */
+function serializeNowState(context: LifeContext, view: ContextView): string {
+  const lines: string[] = [
+    `Age ${context.playerAgeYears.toFixed(1)}, world date ${context.worldDate}.`,
+    `Health: ${describeBar(context.health)}. Hunger: ${describeBar(context.hunger)}. Money: $${String(Math.round(context.money))}. Job: ${context.jobTitle ?? "none"}.`,
+    `Behavioral patterns: ${context.behavioralPatterns.length > 0 ? context.behavioralPatterns.join(", ") : "none yet"}.`,
+    `Pacing preference: ${context.pacing}.`,
+  ];
   if (context.emotionalTrajectory.length > 0) {
     const tail = context.emotionalTrajectory.slice(-8);
     lines.push(`Emotional trajectory (recent, -1..1): ${tail.map((v) => v.toFixed(1)).join(", ")}`);
+  }
+  if (view === "scene") {
+    const recent = context.compressedHistory.slice(-SCENE_HISTORY_ROOMS);
+    if (recent.length > 0) {
+      lines.push("RECENT MOMENTS:", ...recent.map((e) => `  ${e.narrative}`));
+    }
   }
   return lines.join("\n");
 }

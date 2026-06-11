@@ -42,7 +42,7 @@ JSON shape: {"intent": str, "targetLabel": str?, "utterance": str?, "tone": str?
     {
       fn: "player_intent",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: `Player input: ${wrapPlayerInput(sanitizePlayerText(input))}\n\nClassify. JSON only.`,
       maxTokens: 200,
     },
@@ -80,7 +80,7 @@ JSON shape: {"outcome": str, "monologue": str?, "statDeltas": {"hunger": num?, "
     {
       fn: "interaction_result",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: "Resolve the interaction now. JSON only.",
       maxTokens: 400,
     },

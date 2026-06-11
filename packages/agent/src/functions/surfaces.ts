@@ -47,7 +47,7 @@ JSON shape: {"messages": [{"kind": "npc_line|monologue|ambient", "characterName"
     {
       fn: "generate_room_messages",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: "Generate messages now. JSON only.",
       maxTokens: 800,
     },
@@ -78,7 +78,7 @@ JSON shape: {"posts": [{"authorName": str, "text": str, "likes": int, "postedAgo
     {
       fn: "generate_social_feed",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: "Generate the feed now. JSON only.",
       maxTokens: 800,
     },
@@ -104,7 +104,7 @@ JSON shape: {"title": str, "url": str, "paragraphs": [str], "links": [str]}`;
     {
       fn: "generate_webpage",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: `Search query: ${wrapPlayerInput(sanitizePlayerText(searchQuery, 200))}\n\nGenerate the page. JSON only.`,
       maxTokens: 1000,
     },
@@ -137,7 +137,7 @@ JSON shape: {"title": str, "instructions": str, "config": {"template": "multiple
     {
       fn: "generate_minigame",
       model: "haiku",
-      system: buildSystemPrompt(task, context),
+      system: buildSystemPrompt(task, context, "", "scene"),
       user: "Generate the minigame config now. JSON only.",
       maxTokens: 1200,
     },
