@@ -1,4 +1,5 @@
 import {
+  ASSET_CATALOG,
   GAME_CONFIG,
   RoomSchema,
   getAssetsForContext,
@@ -40,10 +41,14 @@ THE SELECTED ROOM CONCEPT: "${candidate.concept}" — ${candidate.premise} (sugg
 
 Rules:
 - The room presents a situation; it never prescribes what the player must do.
-- Entry is on the left wall, exit on the right. Do not place objects on column 0 or the last column.
+- "situation" is shown to the player as opening narration — write it as 1–3 vivid sentences of present-tense scene-setting with stakes or tension. It is the story beat of this room.
+- Entry is on the left wall, exit on the right, both at mid-height. Do not place objects on column 0 or the last column, and keep the middle rows next to both doors clear of solid objects.
 - Choose asset ids ONLY from the vocabulary below. Never invent ids.
-- Place 4–12 objects with meaningful positions inside the room bounds for the size template you choose. Give story-relevant objects interactions; set dressing can omit them.
-- Cast 0–4 characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people.
+- FURNISH THE ROOM FULLY. A lived-in room needs 10–20 objects (tiny/small rooms: 8–14). Push furniture against the top wall and side walls, cluster related objects (chair at table, lamp by couch, plant in corner), and leave a walkable path from the left door to the right door. Empty floor reads as unfinished — fill it.
+- Pick the SMALLEST size template that fits the scene. Intimate scenes (bedroom, office, kitchen) are tiny/small; only public spaces (school, street, party) justify large/wide.
+- Give story-relevant objects interactions with evocative "examine" text that rewards curiosity; set dressing can omit them.
+- Cast 0–4 characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people. NEVER cast the player — their sprite is rendered by the engine.
+- Every character gets a DIFFERENT assetId — never two characters with the same sprite. Match sprite to role and age (variants _b/_c/_d are different outfits/looks of the same archetype).
 - The opening monologue is the player's inner voice: let their nature stats color it without ever naming numbers or stats.
 - Respect the player's age tier strictly.
 
@@ -71,7 +76,7 @@ JSON shape:
       model: "sonnet",
       system: buildSystemPrompt(task, context, extra),
       user: "Generate the room now. JSON only.",
-      maxTokens: 4000,
+      maxTokens: 6000,
     },
     RoomSchema,
   );
@@ -87,10 +92,18 @@ function buildVocabulary(conceptText: string): {
 } {
   const context = conceptText.toLowerCase();
   const list = (kind: "floor" | "wall" | "object" | "character"): string => {
-    const matched = getAssetsForContext(context, kind);
-    const pool = matched.length > 0 ? matched : getAssetsForContext("any", kind);
+    const cap = kind === "object" ? 60 : 40;
+    // Context-matched assets first; pad from the full catalog so the
+    // vocabulary never collapses when the concept wording matches nothing.
+    const pool = getAssetsForContext(context, kind);
+    const seen = new Set(pool.map((a) => a.id));
+    for (const asset of ASSET_CATALOG) {
+      if (pool.length >= cap) break;
+      if (asset.kind !== kind || seen.has(asset.id)) continue;
+      pool.push(asset);
+    }
     return pool
-      .slice(0, kind === "object" ? 60 : 16)
+      .slice(0, cap)
       .map((a) => a.id)
       .join(", ");
   };
@@ -109,6 +122,11 @@ function postValidate(room: RoomLLMOutput): RoomLLMOutput {
     col: Math.max(1, Math.min(size.width - 2, pos.col)),
     row: Math.max(1, Math.min(size.height - 2, pos.row)),
   });
+  // Doors sit at mid-height on the left/right walls (buildRoom contract).
+  // Nothing solid may camp there or the player is sealed in at spawn.
+  const midRow = Math.floor(size.height / 2);
+  const nearDoor = (pos: { col: number; row: number }): boolean =>
+    Math.abs(pos.row - midRow) <= 1 && (pos.col <= 1 || pos.col >= size.width - 2);
 
   return {
     ...room,
@@ -116,11 +134,55 @@ function postValidate(room: RoomLLMOutput): RoomLLMOutput {
     wallAssetId: isValidAssetId(room.wallAssetId) ? room.wallAssetId : "wall_plaster",
     objects: room.objects
       .filter((o) => isValidAssetId(o.assetId))
-      .map((o) => ({ ...o, position: clampPos(o.position) })),
-    characters: room.characters.map((c) => ({
-      ...c,
-      assetId: isValidAssetId(c.assetId) ? c.assetId : "chr_adult_casual",
-      position: clampPos(c.position),
-    })),
+      .map((o) => ({ ...o, position: clampPos(o.position) }))
+      .filter((o) => !(o.solid && nearDoor(o.position))),
+    characters: dedupeSprites(room.characters).map((c) => {
+      const position = clampPos(c.position);
+      if (nearDoor(position)) position.col = position.col <= 1 ? 2 : size.width - 3;
+      return { ...c, position };
+    }),
   };
+}
+
+/** Adult sprite variants used for fallback + dedupe (distinct look per person). */
+const ADULT_VARIANTS = [
+  "chr_adult_casual",
+  "chr_adult_casual_b",
+  "chr_adult_casual_c",
+  "chr_adult_formal",
+  "chr_adult_formal_b",
+  "chr_adult_worker",
+  "chr_adult_worker_b",
+  "chr_middle_aged",
+  "chr_middle_aged_b",
+];
+
+function nameHash(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+/**
+ * No two characters in a room share a sprite. Invalid ids fall back to a
+ * name-hashed adult variant; collisions walk the variant list. Variant ids
+ * that predate the expanded atlas degrade to their base id via isValidAssetId.
+ */
+function dedupeSprites<C extends { name: string; assetId: string }>(characters: C[]): C[] {
+  const used = new Set<string>();
+  return characters.map((c) => {
+    let id = isValidAssetId(c.assetId) ? c.assetId : pickVariant(c.name, used);
+    if (used.has(id)) id = pickVariant(c.name, used);
+    used.add(id);
+    return { ...c, assetId: id };
+  });
+}
+
+function pickVariant(name: string, used: Set<string>): string {
+  const start = nameHash(name) % ADULT_VARIANTS.length;
+  for (let i = 0; i < ADULT_VARIANTS.length; i++) {
+    const candidate = ADULT_VARIANTS[(start + i) % ADULT_VARIANTS.length];
+    if (candidate !== undefined && isValidAssetId(candidate) && !used.has(candidate)) return candidate;
+  }
+  return "chr_adult_casual";
 }

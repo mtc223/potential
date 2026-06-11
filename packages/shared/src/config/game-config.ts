@@ -9,7 +9,7 @@ export const GAME_CONFIG = {
     subTileResolution: 32,
     /** Sub-tile units per frame at 60fps, by life stage. */
     baseSpeed: {
-      toddler: 1.5,
+      toddler: 1.8,
       child: 2.5,
       teen: 3.0,
       youngAdult: 3.0,

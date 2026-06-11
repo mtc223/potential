@@ -308,6 +308,34 @@ const CHAR_STYLES = {
   chr_chef: { stage: "adult", skin: P.skinLight, hair: P.hairBrown, shirt: P.white, pants: P.charcoal },
 };
 
+// Variant ids (chr_x_b/_c/_d) keep the base silhouette but reroll skin, hair,
+// and clothing from these pools — deterministic per id, so every villager in
+// the catalog has a stable, distinct look.
+const SKIN_POOL = [P.skinLight, P.skinMed, P.skinDark];
+const HAIR_POOL = [P.hairBrown, P.hairBlack, P.hairBlonde, P.hairGray, P.redDark];
+const SHIRT_POOL = [P.red, P.blue, P.purple, P.teal, P.yellow, P.pink, P.orange, P.greenPale, P.offwhite, P.brown];
+const PANTS_POOL = [P.navy, P.charcoal, P.brownDark, P.blueDark, P.grayDark, P.greenDark];
+
+function styleFor(id) {
+  const direct = CHAR_STYLES[id];
+  if (direct) return direct;
+  const m = id.match(/^(chr_.+)_[bcd]$/);
+  const base = m ? CHAR_STYLES[m[1]] : null;
+  if (!base) return CHAR_STYLES.chr_adult_casual;
+  const rnd = rngFor(id);
+  const pick = (pool, avoid) => {
+    const choice = pool[Math.floor(rnd() * pool.length)];
+    return choice === avoid ? pool[(pool.indexOf(choice) + 1) % pool.length] : choice;
+  };
+  return {
+    stage: base.stage,
+    skin: pick(SKIN_POOL),
+    hair: base.stage === "senior" ? pick([P.hairGray, P.white]) : pick(HAIR_POOL, P.hairGray),
+    shirt: pick(SHIRT_POOL, base.shirt),
+    pants: pick(PANTS_POOL, base.pants),
+  };
+}
+
 function drawHumanFrame(s, style, dir, step) {
   // step: 0 stand, 1 left leg forward, 2 right leg forward
   const stage = style.stage;
@@ -400,7 +428,7 @@ function drawBabyFrame(s, style, dir, step) {
 }
 
 function drawCharacterStrip(id) {
-  const style = CHAR_STYLES[id] ?? CHAR_STYLES.chr_adult_casual;
+  const style = styleFor(id);
   const strip = new Surface(T * 12, T);
   const dirs = ["down", "up", "left", "right"];
   for (let d = 0; d < 4; d++)

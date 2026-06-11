@@ -17,6 +17,8 @@ import {
   exitRoom,
   getActiveCharacters,
   getCharacter,
+  getTailRoom,
+  loadLifeContext,
   startLife,
   upsertCharacter,
   type LifeSimDb,
@@ -55,7 +57,7 @@ export class GameEngine {
   private roomEntryAt = Date.now();
 
   constructor(
-    private readonly adapter: LLMAdapter,
+    readonly adapter: LLMAdapter,
     private readonly db: LifeSimDb = defaultDb,
     private readonly events: EngineEvents = {},
   ) {}
@@ -78,6 +80,34 @@ export class GameEngine {
     };
     const output = await promptRoom(this.adapter, this.context, birthCandidate, []);
     const built = buildRoom(output, birthCandidate, this.context, null, []);
+    await this.persistUpserts(built.characterUpserts);
+
+    this.currentRoom = built.room;
+    this.roomEntryAt = Date.now();
+    this.events.onMonologue?.(output.openingMonologue);
+    return built.room;
+  }
+
+  /**
+   * Resume a crashed/closed session. The current room is never persisted
+   * (only exited rooms are), so resuming fabricates a fresh current room
+   * from the saved LifeContext — consistent with the epistemology: the room
+   * you were in no longer exists; only compressed memory does.
+   */
+  async resumeLife(): Promise<Room> {
+    const context = await loadLifeContext(this.db);
+    if (context === null || context.deceased) {
+      throw new Error("resumeLife: no resumable life");
+    }
+    this.context = context;
+    const tail = await getTailRoom(this.db);
+
+    this.events.onGenerationPhase?.("The world re-forms around you…");
+    const { candidates } = await generateCandidates(this.adapter, context);
+    const chosen = await selectCandidate(this.adapter, context, candidates);
+    const roster = await getActiveCharacters(this.db);
+    const output = await promptRoom(this.adapter, context, chosen, roster);
+    const built = buildRoom(output, chosen, context, tail, roster);
     await this.persistUpserts(built.characterUpserts);
 
     this.currentRoom = built.room;

@@ -59,7 +59,14 @@ export function buildRoom(
   const rosterByName = new Map(roster.map((c) => [c.name.toLowerCase(), c]));
   const characterUpserts: CharacterRecord[] = [];
 
-  for (const cast of output.characters) {
+  // The model sometimes casts the player as an NPC; the player sprite is
+  // rendered by the engine, so a same-named cast member would appear twice.
+  const playerName = context.playerName.toLowerCase();
+  const castMembers = output.characters.filter(
+    (c) => c.name.toLowerCase() !== playerName && !c.name.toLowerCase().startsWith(playerName + " "),
+  );
+
+  for (const cast of castMembers) {
     const existing = rosterByName.get(cast.name.toLowerCase());
     const record: CharacterRecord =
       existing !== undefined

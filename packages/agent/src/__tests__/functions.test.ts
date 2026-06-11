@@ -278,6 +278,64 @@ describe("prompt architecture", () => {
   });
 });
 
+describe("prompt_room post-validation", () => {
+  const craftedRoom = {
+    label: "Trap Room",
+    description: "d",
+    situation: "s",
+    era: "modern",
+    duration: "day",
+    sizeTemplate: "small",
+    floorAssetId: "floor_wood",
+    wallAssetId: "wall_plaster",
+    objects: [
+      { label: "Door blocker", description: "d", category: "fixture", assetId: "houseplant", position: { col: 1, row: 5 }, solid: true, tags: [] },
+      { label: "Safe shelf", description: "d", category: "fixture", assetId: "bookshelf", position: { col: 1, row: 1 }, solid: true, tags: [] },
+      { label: "Door decor", description: "d", category: "ambient", assetId: "rug", position: { col: 1, row: 5 }, solid: false, tags: [] },
+    ],
+    characters: [
+      { name: "Ann", role: "r", age: 30, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 11, row: 5 }, assetId: "chr_adult_casual" },
+      { name: "Bo", role: "r", age: 31, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 5, row: 2 }, assetId: "chr_adult_casual" },
+      { name: "Cy", role: "r", age: 32, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 6, row: 2 }, assetId: "not_a_real_sprite" },
+    ],
+    openingMonologue: "m",
+  };
+  const craftedAdapter: LLMAdapter = {
+    complete: () => Promise.resolve(JSON.stringify(craftedRoom)),
+  };
+
+  it("drops solid objects from the door rows but keeps decor and clear furniture", async () => {
+    const room = await promptRoom(craftedAdapter, makeContext(), candidate, []);
+    const labels = room.objects.map((o) => o.label);
+    expect(labels).not.toContain("Door blocker");
+    expect(labels).toContain("Safe shelf");
+    expect(labels).toContain("Door decor");
+  });
+
+  it("relocates characters off the door tiles and gives every character a distinct sprite", async () => {
+    const size = GAME_CONFIG.roomGeneration.sizeTemplates.small;
+    const room = await promptRoom(craftedAdapter, makeContext(), candidate, []);
+    const ann = room.characters.find((c) => c.name === "Ann");
+    expect(ann?.position.col).toBe(size.width - 3);
+    const sprites = room.characters.map((c) => c.assetId);
+    expect(new Set(sprites).size).toBe(sprites.length);
+    for (const sprite of sprites) expect(isValidAssetId(sprite)).toBe(true);
+  });
+
+  it("pads the asset vocabulary when the concept matches no contexts", async () => {
+    let objectVocabulary = "";
+    const recorder: LLMAdapter = {
+      complete: (req: LLMRequest) => {
+        objectVocabulary = /Objects: ([^\n]*)/.exec(req.system)?.[1] ?? "";
+        return Promise.resolve(JSON.stringify(craftedRoom));
+      },
+    };
+    const nonsense = { concept: "zzz", premise: "qqq", duration: "day" as const, weight: 0.5 };
+    await promptRoom(recorder, makeContext(), nonsense, []);
+    expect(objectVocabulary.split(",").length).toBeGreaterThan(30);
+  });
+});
+
 describe("model routing", () => {
   it("routes prompt_room to sonnet and everything else to haiku", async () => {
     const models: Record<string, string> = {};
