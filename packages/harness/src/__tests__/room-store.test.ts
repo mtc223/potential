@@ -1,9 +1,10 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { Room, RoomId } from "@potential/shared";
+import type { RoomId } from "@potential/shared";
 import { LifeSimDb } from "../db/life-sim-db.js";
 import { insertRoom, getTailRoom } from "../db/room-store.js";
 import { LinkedListError } from "../db/errors.js";
+import { makeRoom, makeRoomId } from "./fixtures.js";
 
 // Each test gets a fresh DB with a unique name to avoid cross-test contamination.
 let testDb: LifeSimDb;
@@ -15,31 +16,6 @@ beforeEach(() => {
 afterEach(async () => {
   await testDb.delete();
 });
-
-// ---------------------------------------------------------------------------
-// Fixture helpers
-// ---------------------------------------------------------------------------
-
-function makeRoomId(): RoomId {
-  return `room_${crypto.randomUUID()}` as RoomId;
-}
-
-function makeRoom(overrides: Partial<Room> = {}): Room {
-  return {
-    id: makeRoomId(),
-    sequenceIndex: 0,
-    previousRoomId: null,
-    nextRoomId: null,
-    label: "Test Room",
-    description: "A room for testing.",
-    objects: new Map(),
-    summary: "A quiet beginning.",
-    era: "modern",
-    createdAt: Date.now(),
-    exitedAt: Date.now() + 1000,
-    ...overrides,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Happy path
