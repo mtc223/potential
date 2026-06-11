@@ -1,17 +1,19 @@
 import {
   ASSET_CATALOG,
   GAME_CONFIG,
+  LLMValidationError,
   RoomSchema,
   getAssetsForContext,
   isValidAssetId,
+  validateLLMOutput,
   type CharacterRecord,
   type LifeContext,
   type RoomCandidate,
   type RoomLLMOutput,
 } from "@potential/shared";
 import type { LLMAdapter } from "../adapter.js";
-import { callValidated } from "../call.js";
 import { buildSystemPrompt } from "../prompts/preamble.js";
+import { ROOM_SCRIPT_FORMAT, RoomScriptError, looksLikeRoomScript, parseRoomScript } from "../prompts/room-script.js";
 
 /**
  * prompt_room — Sonnet. The ONLY function routed to Sonnet.
@@ -35,33 +37,26 @@ export async function promptRoom(
     )
     .join("\n");
 
-  const task = `Fabricate the next room of this life as a JSON object.
+  const task = `Fabricate the next room of this life as a room script.
 
 THE SELECTED ROOM CONCEPT: "${candidate.concept}" — ${candidate.premise} (suggested duration: ${candidate.duration})
 
 Rules:
 - The room presents a situation; it never prescribes what the player must do.
-- "situation" is shown to the player as opening narration — write it as 1–3 vivid sentences of present-tense scene-setting with stakes or tension. It is the story beat of this room.
-- Entry is on the left wall, exit on the right, both at mid-height. Do not place objects on column 0 or the last column, and keep the middle rows next to both doors clear of solid objects.
+- SIT is shown to the player as opening narration — 1–3 vivid present-tense sentences with stakes or tension. It is the story beat of this room. Spend your words on SIT and MONO; everything else is terse.
+- Entry is on the left wall, exit on the right, both at mid-height. Do not place anything on column 0 or the last column, and keep the middle rows next to both doors clear of solid objects.
 - Choose asset ids ONLY from the vocabulary below. Never invent ids.
-- FURNISH THE ROOM FULLY. A lived-in room needs 9–14 objects (tiny/small rooms: 7–10). Push furniture against the top wall and side walls, cluster related objects (chair at table, lamp by couch, plant in corner), and leave a walkable path from the left door to the right door. Empty floor reads as unfinished — fill it.
+- FURNISH THE ROOM FULLY: 9–14 placed items (tiny/small rooms: 7–10), most as SET dressing. Push furniture against the top and side walls, cluster related items (chair at table, lamp by couch), leave a walkable path between the doors.
 - Pick the SMALLEST size template that fits the scene. Intimate scenes (bedroom, office, kitchen) are tiny/small; only public spaces (school, street, party) justify large/wide.
-- Give 3–5 story-relevant objects an interaction with evocative "examine" text (≤ 25 words) that rewards curiosity; everything else is set dressing with NO interaction.
-- BE TERSE — this JSON renders a game frame, not prose. Object descriptions ≤ 8 words. Character personality/backstory/intent: one tight phrase each. Spend your words on "situation" and "openingMonologue"; compress everything else.
-- Cast 0–4 characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people. NEVER cast the player — their sprite is rendered by the engine.
-- Every character gets a DIFFERENT assetId — never two characters with the same sprite. Match sprite to role and age (variants _b/_c/_d are different outfits/looks of the same archetype).
-- The opening monologue is the player's inner voice: let their nature stats color it without ever naming numbers or stats.
+- Promote only 2–4 story-relevant items to OBJ lines with evocative interaction text that rewards curiosity.
+- Cast 0–4 CHR characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people. NEVER cast the player — their sprite is rendered by the engine. Every character gets a DIFFERENT sprite assetId (variants _b/_c/_d are different looks of the same archetype).
 - Respect the player's age tier strictly.
 
 Size templates (width x height in tiles): ${Object.entries(GAME_CONFIG.roomGeneration.sizeTemplates)
     .map(([k, v]) => `${k}=${String(v.width)}x${String(v.height)}`)
     .join(", ")}
 
-JSON shape:
-{"label": str, "description": str, "situation": str, "era": "modern", "duration": "day|week|month|year", "sizeTemplate": "tiny|small|medium|large|wide|tall", "floorAssetId": str, "wallAssetId": str,
- "objects": [{"label": str, "description": str, "category": "item|fixture|ambient", "assetId": str, "position": {"col": int, "row": int}, "solid": bool, "interaction": {"type": "examine|use|pick_up|eat|drink|sit", "text": str}?, "tags": [str]}],
- "characters": [{"name": str, "role": str, "age": num, "personality": str, "backstory": str, "intent": str, "emotionalState": str, "ambientLine": str?, "position": {"col": int, "row": int}, "assetId": str}],
- "openingMonologue": str}`;
+${ROOM_SCRIPT_FORMAT}`;
 
   const extra = [
     `ASSET VOCABULARY:\nFloors: ${vocabulary.floors}\nWalls: ${vocabulary.walls}\nObjects: ${vocabulary.objects}\nCharacter sprites: ${vocabulary.characters}`,
@@ -70,19 +65,40 @@ JSON shape:
     .filter((s) => s.length > 0)
     .join("\n\n");
 
-  const room = await callValidated(
-    adapter,
-    {
+  // Room-script decode with one bounded retry, mirroring callValidated.
+  // JSON responses still decode (MockAdapter, or a model ignoring the
+  // format); either way RoomSchema gates the result before game state.
+  const baseUser = "Write the room script now.";
+  let lastError = "";
+  for (let attempt = 0; attempt <= 1; attempt++) {
+    const raw = await adapter.complete({
       fn: "prompt_room",
       model: "sonnet",
       system: buildSystemPrompt(task, context, extra),
-      user: "Generate the room now. JSON only.",
-      maxTokens: 3500,
-    },
-    RoomSchema,
-  );
-
-  return postValidate(room);
+      user:
+        attempt === 0
+          ? baseUser
+          : `${baseUser}\n\nYour previous response was invalid: ${lastError}\nFollow the room script format exactly.`,
+      maxTokens: 1600,
+    });
+    try {
+      const decoded = looksLikeRoomScript(raw)
+        ? RoomSchema.parse(parseRoomScript(raw, context.era))
+        : validateLLMOutput(RoomSchema, raw);
+      return postValidate(decoded);
+    } catch (error) {
+      if (error instanceof RoomScriptError || error instanceof LLMValidationError) {
+        lastError = error.message;
+        continue;
+      }
+      if (error instanceof Error && error.name === "ZodError") {
+        lastError = error.message.slice(0, 600);
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new LLMValidationError(`prompt_room: invalid after retry — ${lastError}`, "");
 }
 
 function buildVocabulary(conceptText: string): {

@@ -369,6 +369,71 @@ describe("prompt_room post-validation", () => {
   });
 });
 
+describe("room script language", () => {
+  const script = `ROOM First Morning Home | small | floor_wood | wall_wallpaper | day
+SIT The nursery is finally quiet. Sunlight crosses the crib.
+MONO The warm ones are nearby.
+SET crib@5,1 rocking_chair@2,2 houseplant@10,1
+SET floor_lamp@1,1 rug@5,4
+OBJ family_photo@7,1 | A new family photo | examine | Three exhausted, glowing faces.
+CHR Margaret | mother | 31 | chr_adult_casual@3,3 | fierce, exhausted | settle the baby | tender | Hi, little one.
+CHR David | father | 33 | chr_adult_casual_b@8,4 | earnest, hovering | be helpful | overjoyed |
+this line is noise and must be ignored
+SET not_a_position also@noise broken@1 toy_chest@9,2`;
+
+  const scriptAdapter: LLMAdapter = { complete: () => Promise.resolve(script) };
+
+  it("parses a full script into a valid room", async () => {
+    const room = await promptRoom(scriptAdapter, makeContext(), candidate, []);
+    expect(room.label).toBe("First Morning Home");
+    expect(room.situation).toContain("finally quiet");
+    expect(room.openingMonologue).toBe("The warm ones are nearby.");
+    expect(room.era).toBe("modern"); // injected from context, not the model
+    expect(room.duration).toBe("day");
+    // 5 SET + 1 OBJ + 1 salvaged toy chest from the noisy SET line.
+    expect(room.objects).toHaveLength(7);
+    expect(room.characters).toHaveLength(2);
+  });
+
+  it("set dressing inherits name and solidity from the catalog", async () => {
+    const room = await promptRoom(scriptAdapter, makeContext(), candidate, []);
+    const crib = room.objects.find((o) => o.assetId === "crib");
+    expect(crib?.label).toBe("Crib");
+    expect(crib?.solid).toBe(true);
+    const rug = room.objects.find((o) => o.assetId === "rug");
+    expect(rug?.solid).toBe(false);
+  });
+
+  it("parses interactive objects and characters with distinct sprites", async () => {
+    const room = await promptRoom(scriptAdapter, makeContext(), candidate, []);
+    const photo = room.objects.find((o) => o.assetId === "family_photo");
+    expect(photo?.label).toBe("A new family photo");
+    expect(photo?.interaction?.type).toBe("examine");
+    expect(photo?.interaction?.text).toContain("glowing");
+    const margaret = room.characters.find((c) => c.name === "Margaret");
+    expect(margaret?.age).toBe(31);
+    expect(margaret?.ambientLine).toBe("Hi, little one.");
+    const david = room.characters.find((c) => c.name === "David");
+    expect(david?.assetId).toBe("chr_adult_casual_b");
+    expect(david?.ambientLine).toBeUndefined(); // trailing empty field
+  });
+
+  it("re-prompts once when the script is missing required lines", async () => {
+    let calls = 0;
+    const flaky: LLMAdapter = {
+      complete: (req: LLMRequest) => {
+        calls += 1;
+        if (calls === 1) return Promise.resolve("ROOM Empty | small | floor_wood | wall_plaster | day");
+        expect(req.user).toContain("missing SIT");
+        return Promise.resolve(script);
+      },
+    };
+    const room = await promptRoom(flaky, makeContext(), candidate, []);
+    expect(room.label).toBe("First Morning Home");
+    expect(calls).toBe(2);
+  });
+});
+
 describe("model routing", () => {
   it("routes prompt_room to sonnet and everything else to haiku", async () => {
     const models: Record<string, string> = {};
