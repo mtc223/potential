@@ -109,6 +109,33 @@ describe("10-room end-to-end smoke test (#15)", () => {
     }
   });
 
+  it("crying records an event and the care response feeds the baby", async () => {
+    await engine.startNewLife(startParams);
+    const before = must(engine.context, "context").hunger;
+    engine.cry();
+    const after = must(engine.context, "context");
+    expect(after.hunger).toBeGreaterThanOrEqual(before);
+    expect(currentRoom().events.some((e) => e.playerChoice === "cry")).toBe(true);
+  });
+
+  it("the time dial persists and feeds candidate generation", async () => {
+    await engine.startNewLife(startParams);
+    await engine.setTimeDial("year");
+    expect(must(await loadLifeContext(db), "ctx").preferredRoomDuration).toBe("year");
+
+    const mock = new MockAdapter();
+    let sawDial = false;
+    engine.adapter.complete = (req): Promise<string> => {
+      if (req.fn === "generate_candidates") sawDial = req.system.task.includes('TIME DIAL') && req.system.task.includes('"year"');
+      return mock.complete(req);
+    };
+    await engine.transition();
+    expect(sawDial).toBe(true);
+
+    await engine.setTimeDial(undefined);
+    expect(must(await loadLifeContext(db), "ctx").preferredRoomDuration).toBeUndefined();
+  });
+
   it("a failed silent character update never aborts the transition", async () => {
     await engine.startNewLife(startParams);
     const mock = new MockAdapter();

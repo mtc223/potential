@@ -3,11 +3,13 @@ import {
   ASSET_CATALOG,
   GAME_CONFIG,
   babbleize,
+  isControlUnlocked,
   isPreverbal,
   sanitizeName,
   type Era,
   type LifeContext,
   type Room,
+  type RoomDuration,
   type SocialFeedLLMOutput,
   type WorldObject,
 } from "@potential/shared";
@@ -16,6 +18,7 @@ import {
   AnthropicAdapter,
   MockAdapter,
   clearApiKey,
+  generateRoomMessages,
   generateSocialFeed,
   loadApiKey,
   saveApiKey,
@@ -33,6 +36,7 @@ import {
   objectFootprints,
   playBark,
   playObjectCue,
+  type SpeechEvent,
   type SpriteAtlas,
 } from "@potential/renderer";
 import { GameEngine, LifeEndedError } from "./engine/engine.js";
@@ -67,7 +71,15 @@ export default function App(): JSX.Element {
   const [target, setTarget] = useState<WorldObject | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
   const [phone, setPhone] = useState<SocialFeedLLMOutput | null | "loading">(null);
+  const [speech, setSpeech] = useState<SpeechEvent | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
+  const speechSeqRef = useRef(0);
+  const lastCryAtRef = useRef(0);
+
+  const speakBubble = useCallback((targetLabel: string, text: string) => {
+    speechSeqRef.current += 1;
+    setSpeech({ targetLabel, text, seq: speechSeqRef.current });
+  }, []);
 
   const pushMonologue = useCallback((text: string) => {
     setMonologue((m) => [...m.slice(-30), text]);
@@ -166,6 +178,60 @@ export default function App(): JSX.Element {
     },
     [pushMonologue, syncFromEngine],
   );
+
+  // Room messages: one Haiku call per room schedules the room's "script" —
+  // NPC lines surface as speech bubbles above heads, ambient beats and inner
+  // thoughts go to the ticker. This is the parents talking over the crib.
+  const messagesRoomRef = useRef<string | null>(null);
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (room === null || context === null || engine === null) return;
+    if (messagesRoomRef.current === room.id) return;
+    messagesRoomRef.current = room.id;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    generateRoomMessages(engine.adapter, context, room)
+      .then(({ messages }) => {
+        if (messagesRoomRef.current !== room.id) return;
+        for (const message of messages) {
+          timers.push(
+            setTimeout(() => {
+              if (messagesRoomRef.current !== room.id) return;
+              if (message.kind === "npc_line" && message.characterName !== undefined) {
+                speakBubble(message.characterName, message.text);
+                playBark(message.text, message.characterName, 0.4);
+              } else {
+                pushMonologue(message.text);
+              }
+            }, Math.max(1500, message.atSeconds * 1000)),
+          );
+        }
+      })
+      .catch(() => undefined); // The room just breathes less.
+    return () => {
+      for (const timer of timers) clearTimeout(timer);
+    };
+  }, [room, context, pushMonologue, speakBubble]);
+
+  // Pre-crawl rooms have no exit door the player can reach: when the baby is
+  // calm (no cry) for 10 seconds, the grown-ups gather up and carry life
+  // forward. Crying resets the clock.
+  const canMove = context !== null && isControlUnlocked("move", context);
+  useEffect(() => {
+    if (room === null || canMove) return;
+    if (bottom.kind !== "explore" || generating !== null) return;
+    lastCryAtRef.current = Date.now();
+    const interval = setInterval(() => {
+      if (Date.now() - lastCryAtRef.current < 10000) return;
+      clearInterval(interval);
+      const engine = engineRef.current;
+      if (engine === null) return;
+      pushMonologue("The grown-ups stir, gather their things. The world is about to change again.");
+      void runGenerating(() => engine.transition());
+    }, 500);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [room, canMove, bottom.kind, generating, pushMonologue, runGenerating]);
 
   // ── screens ──────────────────────────────────────────────────────────
 
@@ -306,12 +372,11 @@ export default function App(): JSX.Element {
 
   const engine = engineRef.current;
   const paused = bottom.kind !== "explore" || generating !== null || phone !== null;
-  // No phone for babies (or for 1885): it appears when the player is old
-  // enough to plausibly carry one and the era has them.
-  const hasPhone =
-    context !== null &&
-    context.playerAgeYears >= GAME_CONFIG.phone.phoneAgeYears &&
-    context.era !== "industrial";
+  // Every control derives from the CONTROLS registry — unlocked over a life.
+  const canInteract = context !== null && isControlUnlocked("interact", context);
+  const canSpeak = context !== null && isControlUnlocked("speak", context);
+  const canCry = context !== null && isControlUnlocked("cry", context);
+  const hasPhone = context !== null && isControlUnlocked("phone", context);
 
   const handleInteract = (object: WorldObject): void => {
     if (engine === null || paused) return;
@@ -361,20 +426,41 @@ export default function App(): JSX.Element {
           { speaker: "character" as const, text: response.dialogue },
         ];
         playBark(response.dialogue, character.name);
-        setBottom({
-          kind: "dialogue",
-          speaker: character.name,
-          text: response.dialogue,
-          voice: character.name,
-          then: response.endsConversation
+        // Spoken words live above the speaker's head, not in a bottom box.
+        speakBubble(character.name, response.dialogue);
+        setBottom(
+          response.endsConversation
             ? { kind: "explore" }
             : { kind: "converse", npc, history: newHistory },
-        });
+        );
       } catch (error) {
         pushMonologue(`(${error instanceof Error ? error.message : "they didn't hear you"})`);
         setBottom({ kind: "explore" });
       } finally {
         setGenerating(null);
+      }
+    })();
+  };
+
+  // Cry — the pre-verbal toolkit. Hunger care in the engine, a wail in the
+  // air, and the nearest caregiver answers from across the room.
+  const handleCry = (): void => {
+    if (engine === null || room === null || generating !== null) return;
+    lastCryAtRef.current = Date.now();
+    engine.cry();
+    syncFromEngine();
+    playBark("waaah waah", context?.playerName ?? "baby", 0.6);
+    const npc = [...room.objects.values()].find((o) => o.characterId !== undefined);
+    if (npc === undefined) return;
+    void (async () => {
+      try {
+        const { response, character } = await engine.talkTo(npc, "(cries)");
+        lastCryAtRef.current = Date.now();
+        syncFromEngine();
+        playBark(response.dialogue, character.name, 0.5);
+        speakBubble(character.name, response.dialogue);
+      } catch {
+        // They were always going to come anyway.
       }
     })();
   };
@@ -477,7 +563,14 @@ export default function App(): JSX.Element {
       <div style={{ display: "flex", alignItems: "center", height: "8%", minHeight: 40, background: "#16141f", borderBottom: "2px solid #23213a" }}>
         <MonologueTicker entries={monologue} />
         {context !== null && (
-          <div style={{ display: "flex", gap: 12, padding: "0 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 12px" }}>
+            <TimeDial
+              value={context.preferredRoomDuration}
+              onChange={(d) => {
+                void engine?.setTimeDial(d);
+                syncFromEngine();
+              }}
+            />
             <span style={{ color: "#8d889f", fontFamily: "monospace", fontSize: 12 }}>
               {context.playerName} · {Math.floor(context.playerAgeYears)}y · ${Math.round(context.money)} · {context.worldDate}
             </span>
@@ -487,7 +580,7 @@ export default function App(): JSX.Element {
         )}
       </div>
 
-      {/* viewport */}
+      {/* viewport — no room titles: events are experienced, never announced */}
       <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
         {room !== null && (
           <RoomCanvas
@@ -495,17 +588,15 @@ export default function App(): JSX.Element {
             atlas={atlas}
             playerAssetId={playerAsset(context?.playerAgeYears ?? 30)}
             paused={paused}
+            canMove={canMove}
+            canInteract={canInteract}
+            speech={speech}
             onInteract={handleInteract}
             onExit={() => {
               if (engine !== null && generating === null) void runGenerating(() => engine.transition());
             }}
             onTargetChange={setTarget}
           />
-        )}
-        {room !== null && (
-          <div style={{ position: "absolute", top: 8, left: 10, color: "#f2f2ee", fontFamily: "'Courier New', monospace", fontSize: 13, textShadow: "1px 1px 0 #16141f" }}>
-            {room.label}
-          </div>
         )}
         {generating !== null && <GeneratingOverlay phase={generating} />}
         {phone !== null && (
@@ -549,16 +640,25 @@ export default function App(): JSX.Element {
         {bottom.kind === "explore" && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "'Courier New', monospace", fontSize: 13, color: "#8d889f" }}>
             <span style={{ flex: 1 }}>
-              {target !== null
+              {target !== null && canInteract
                 ? `[E] ${target.characterId !== undefined ? "Talk to" : target.interaction?.type === "examine" ? "Examine" : "Use"} ${target.label}`
-                : "WASD/arrows to move · walk right to move on with life"}
+                : canMove
+                  ? "WASD/arrows to move · walk right to move on with life"
+                  : "You are small. The world carries you."}
             </span>
+            {canCry && (
+              <button style={buttonStyle} onClick={handleCry}>
+                Cry [C]
+              </button>
+            )}
             <button style={buttonStyle} onClick={() => { setBottom({ kind: "input", purpose: "think" }); }}>
               Think [T]
             </button>
-            <button style={buttonStyle} onClick={() => { setBottom({ kind: "input", purpose: "speak" }); }}>
-              Speak [Y]
-            </button>
+            {canSpeak && (
+              <button style={buttonStyle} onClick={() => { setBottom({ kind: "input", purpose: "speak" }); }}>
+                Speak [Y]
+              </button>
+            )}
             {hasPhone && (
               <button style={buttonStyle} onClick={openPhone}>
                 Phone [P]
@@ -570,8 +670,9 @@ export default function App(): JSX.Element {
       <ExploreHotkeys
         active={bottom.kind === "explore" && generating === null && phone === null}
         onThink={() => { setBottom({ kind: "input", purpose: "think" }); }}
-        onSpeak={() => { setBottom({ kind: "input", purpose: "speak" }); }}
-        onPhone={openPhone}
+        onSpeak={canSpeak ? () => { setBottom({ kind: "input", purpose: "speak" }); } : undefined}
+        onCry={canCry ? handleCry : undefined}
+        onPhone={hasPhone ? openPhone : undefined}
       />
     </Shell>
   );
@@ -769,24 +870,57 @@ function ExploreHotkeys({
   active,
   onThink,
   onSpeak,
+  onCry,
   onPhone,
 }: {
   active: boolean;
   onThink: () => void;
-  onSpeak: () => void;
-  onPhone: () => void;
+  onSpeak?: (() => void) | undefined;
+  onCry?: (() => void) | undefined;
+  onPhone?: (() => void) | undefined;
 }): JSX.Element | null {
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "t") onThink();
-      if (e.key === "y") onSpeak();
-      if (e.key === "p") onPhone();
+      if (e.key === "y") onSpeak?.();
+      if (e.key === "c") onCry?.();
+      if (e.key === "p") onPhone?.();
     };
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("keydown", onKey); };
-  }, [active, onThink, onSpeak, onPhone]);
+  }, [active, onThink, onSpeak, onCry, onPhone]);
   return null;
+}
+
+const TIME_DIAL_STOPS: (RoomDuration | undefined)[] = [undefined, "day", "week", "month", "year"];
+
+/** The time dial — a horizontal bar with a thumb. Leftmost = the story decides. */
+function TimeDial({
+  value,
+  onChange,
+}: {
+  value: RoomDuration | undefined;
+  onChange: (d: RoomDuration | undefined) => void;
+}): JSX.Element {
+  const index = Math.max(0, TIME_DIAL_STOPS.indexOf(value));
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Time per room — how much life each scene covers">
+      <span style={{ color: "#8d889f", fontFamily: "monospace", fontSize: 11 }}>time</span>
+      <input
+        type="range"
+        min={0}
+        max={TIME_DIAL_STOPS.length - 1}
+        step={1}
+        value={index}
+        onChange={(e) => { onChange(TIME_DIAL_STOPS[Number(e.target.value)]); }}
+        style={{ width: 90, accentColor: "#e3c350", cursor: "pointer" }}
+      />
+      <span style={{ color: "#e3c350", fontFamily: "monospace", fontSize: 11, width: 38 }}>
+        {value ?? "auto"}
+      </span>
+    </div>
+  );
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────

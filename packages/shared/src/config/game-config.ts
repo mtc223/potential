@@ -9,13 +9,13 @@ export const GAME_CONFIG = {
     subTileResolution: 32,
     /** Sub-tile units per frame at 60fps, by life stage. */
     baseSpeed: {
-      toddler: 1.8,
-      child: 2.5,
-      teen: 3.0,
-      youngAdult: 3.0,
-      adult: 3.0,
-      middleAged: 2.8,
-      senior: 2.2,
+      toddler: 1.1,
+      child: 1.8,
+      teen: 2.2,
+      youngAdult: 2.2,
+      adult: 2.2,
+      middleAged: 2.0,
+      senior: 1.5,
     },
     minSpeedMultiplier: 0.3,
   },
@@ -26,6 +26,12 @@ export const GAME_CONFIG = {
   phone: {
     /** Minimum age to carry a phone. The industrial era never has one. */
     phoneAgeYears: 13,
+  },
+  milestones: {
+    /** WASD/interact unlock here — the learning-to-crawl scene. */
+    crawlAgeYears: 0.7,
+    /** Speak unlocks here — still babble until speechAgeYears. */
+    firstWordsAgeYears: 1.1,
   },
   interaction: {
     /** Sub-tile units. */
@@ -41,13 +47,15 @@ export const GAME_CONFIG = {
     maxBatchedEvalCharacters: 8,
   },
   roomGeneration: {
+    // Wide-rectangular, sized to fill a 16:9-ish viewport without acres of
+    // empty floor. Heights stay <= 9 so a room never letterboxes vertically.
     sizeTemplates: {
-      tiny: { width: 10, height: 8 },
-      small: { width: 12, height: 10 },
-      medium: { width: 16, height: 12 },
-      large: { width: 20, height: 15 },
-      wide: { width: 24, height: 12 },
-      tall: { width: 12, height: 18 },
+      tiny: { width: 8, height: 6 },
+      small: { width: 11, height: 7 },
+      medium: { width: 13, height: 8 },
+      large: { width: 16, height: 9 },
+      wide: { width: 18, height: 9 },
+      tall: { width: 10, height: 9 },
     },
     maxObjects: 40,
     maxCharacters: 8,

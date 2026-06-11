@@ -49,6 +49,7 @@ Rules:
 - FURNISH THE ROOM FULLY: 9–14 placed items (tiny/small rooms: 7–10), most as SET dressing. Push furniture against the top and side walls, cluster related items (chair at table, lamp by couch), leave a walkable path between the doors.
 - Pick the SMALLEST size template that fits the scene. Intimate scenes (bedroom, office, kitchen) are tiny/small; only public spaces (school, street, party) justify large/wide.
 - Promote only 2–4 story-relevant items to OBJ lines with evocative interaction text that rewards curiosity.
+- Hunger is a real mechanic: when the scene plausibly includes food or drink (kitchens, meals, a bottle by the crib, a lunchbox), make 1–2 of the OBJ items consumable (eat/drink).
 - Cast 0–4 CHR characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people. NEVER cast the player — their sprite is rendered by the engine. Every character gets a DIFFERENT sprite assetId (variants _b/_c/_d are different looks of the same archetype).
 - Respect the player's age tier strictly.
 

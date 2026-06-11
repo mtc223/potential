@@ -21,6 +21,7 @@ import {
   getCharacter,
   getTailRoom,
   loadLifeContext,
+  saveLifeContext,
   startLife,
   upsertCharacter,
   type LifeSimDb,
@@ -76,7 +77,7 @@ export class GameEngine {
 
     const birthCandidate = {
       concept: "Birth",
-      premise: `${params.playerName} is born. A hospital room, bright lights, the first cry. BOTH parents are present as named cast characters — give them names and a warmth or tension that seeds this family's dynamic.`,
+      premise: `${params.playerName} is born. A TINY hospital recovery room — use the tiny size template. The mother rests in a hospital bed holding the newborn; the father is at her side. Cast BOTH parents as named characters and place the mother adjacent to the bed. The player is the newborn, held in her arms — they cannot move, only cry. Give the parents a warmth or tension that seeds this family's dynamic.`,
       duration: "day" as const,
       weight: 1,
     };
@@ -210,6 +211,33 @@ export class GameEngine {
   /** Free-text player input → structured intent. */
   async classifyInput(text: string): Promise<PlayerIntentLLMOutput> {
     return playerIntent(this.adapter, this.mustContext(), this.mustRoom(), text);
+  }
+
+  /**
+   * Cry — the newborn's whole toolkit. Records the event and models the care
+   * response: crying gets you fed and held, so hunger recovers a little.
+   * The caller routes the cry to a nearby caregiver via talkTo for dialogue.
+   */
+  cry(): void {
+    const context = this.mustContext();
+    this.context = { ...context, hunger: clamp01(context.hunger + 0.15) };
+    this.recordEvent({
+      type: "speech",
+      description: "Cried",
+      playerChoice: "cry",
+      outcome: "Someone always comes.",
+      characterIds: [],
+    });
+  }
+
+  /** The time dial: player-preferred room duration. Undefined = story decides. */
+  async setTimeDial(duration: Room["duration"] | undefined): Promise<void> {
+    const context = this.mustContext();
+    const next: LifeContext = { ...context };
+    if (duration === undefined) delete next.preferredRoomDuration;
+    else next.preferredRoomDuration = duration;
+    this.context = next;
+    await saveLifeContext(next, this.db);
   }
 
   /**

@@ -352,15 +352,16 @@ describe("prompt_room post-validation", () => {
     sizeTemplate: "small",
     floorAssetId: "floor_wood",
     wallAssetId: "wall_plaster",
+    // small template is 11x7 — doors sit at midRow 3.
     objects: [
-      { label: "Door blocker", description: "d", category: "fixture", assetId: "houseplant", position: { col: 1, row: 5 }, solid: true, tags: [] },
+      { label: "Door blocker", description: "d", category: "fixture", assetId: "houseplant", position: { col: 1, row: 3 }, solid: true, tags: [] },
       { label: "Safe shelf", description: "d", category: "fixture", assetId: "bookshelf", position: { col: 1, row: 1 }, solid: true, tags: [] },
-      { label: "Door decor", description: "d", category: "ambient", assetId: "rug", position: { col: 1, row: 5 }, solid: false, tags: [] },
+      { label: "Door decor", description: "d", category: "ambient", assetId: "rug", position: { col: 1, row: 3 }, solid: false, tags: [] },
     ],
     characters: [
-      { name: "Ann", role: "r", age: 30, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 11, row: 5 }, assetId: "chr_adult_casual" },
-      { name: "Bo", role: "r", age: 31, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 5, row: 2 }, assetId: "chr_adult_casual" },
-      { name: "Cy", role: "r", age: 32, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 6, row: 2 }, assetId: "not_a_real_sprite" },
+      { name: "Ann", role: "r", age: 30, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 10, row: 3 }, assetId: "chr_adult_casual" },
+      { name: "Bo", role: "r", age: 31, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 5, row: 1 }, assetId: "chr_adult_casual" },
+      { name: "Cy", role: "r", age: 32, personality: "p", backstory: "b", intent: "i", emotionalState: "e", position: { col: 6, row: 1 }, assetId: "not_a_real_sprite" },
     ],
     openingMonologue: "m",
   };
@@ -410,7 +411,7 @@ OBJ family_photo@7,1 | A new family photo | examine | Three exhausted, glowing f
 CHR Margaret | mother | 31 | chr_adult_casual@3,3 | fierce, exhausted | settle the baby | tender | Hi, little one.
 CHR David | father | 33 | chr_adult_casual_b@8,4 | earnest, hovering | be helpful | overjoyed |
 this line is noise and must be ignored
-SET not_a_position also@noise broken@1 toy_chest@9,2`;
+SET not_a_position also@noise broken@1 toy_chest@8,1`;
 
   const scriptAdapter: LLMAdapter = { complete: () => Promise.resolve(script) };
 

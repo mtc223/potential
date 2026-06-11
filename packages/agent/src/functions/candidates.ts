@@ -1,5 +1,6 @@
 import {
   CandidatesSchema,
+  GAME_CONFIG,
   SelectCandidateSchema,
   type CandidatesLLMOutput,
   type LifeContext,
@@ -27,7 +28,9 @@ Rules:
 - Weight (0-1) = how strongly life is currently pulling toward this concept.
 - Duration reflects narrative density: crises slow to days, routine compresses to months/years.
 - KEEP LIFE MOVING. If the last 2+ rooms covered the same life-period (same routine, same stakes), at least half the candidates must jump forward — months or a year — to the next distinct chapter (first steps, first words, daycare, a sibling, a move). A life is a handful of vivid scenes, not an exhaustive diary.
+- MILESTONES are scenes, not summaries: stage learning-to-crawl near age ${String(GAME_CONFIG.milestones.crawlAgeYears)} and first words near age ${String(GAME_CONFIG.milestones.firstWordsAgeYears)}. Do not jump a duration that skips past an unreached milestone.
 - Respect pacing preference: 'slow' favors shorter durations, 'fast' favors longer.
+${context.preferredRoomDuration !== undefined ? `- TIME DIAL: the player set room duration to "${context.preferredRoomDuration}". Strongly prefer candidates of that duration (milestone scenes may still zoom in).` : ""}
 ${intentSignal !== undefined ? `- The player has signaled intent: "${intentSignal}". Weight at least one matching candidate strongly.` : ""}
 
 JSON shape: {"candidates": [{"concept": str, "premise": str, "duration": "day|week|month|year", "weight": num}]}`;

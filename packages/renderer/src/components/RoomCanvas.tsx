@@ -13,6 +13,15 @@ import {
 
 const T = 32;
 
+/** A spoken line to render as a bubble above an NPC's head. */
+export interface SpeechEvent {
+  /** Matched against object labels (case-insensitive). */
+  targetLabel: string;
+  text: string;
+  /** Monotonic — a new seq triggers a new bubble. */
+  seq: number;
+}
+
 export interface RoomCanvasProps {
   room: Room;
   atlas: SpriteAtlas;
@@ -20,10 +29,19 @@ export interface RoomCanvasProps {
   playerAssetId: string;
   /** Freeze movement while dialogue/input/overlays are open. */
   paused: boolean;
+  /** Movement control unlocked (CONTROLS registry). Locked = held/carried. */
+  canMove: boolean;
+  /** Interact control unlocked (CONTROLS registry). */
+  canInteract: boolean;
+  /** Latest spoken line — rendered as a bubble above the speaker. */
+  speech?: SpeechEvent | null;
   onInteract: (target: WorldObject) => void;
   onExit: () => void;
   onTargetChange?: (target: WorldObject | null) => void;
 }
+
+/** Floor coverings draw under everything — never over the player. */
+const FLAT_ASSETS = new Set(["rug"]);
 
 /**
  * RoomCanvas — the pixel world. 32px tiles, 3/4 top-down, y-sorted sprites,
@@ -35,6 +53,9 @@ export function RoomCanvas({
   atlas,
   playerAssetId,
   paused,
+  canMove,
+  canInteract,
+  speech = null,
   onInteract,
   onExit,
   onTargetChange,
@@ -42,6 +63,10 @@ export function RoomCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
+  const controlsRef = useRef({ canMove, canInteract });
+  controlsRef.current = { canMove, canInteract };
+  const speechRef = useRef<SpeechEvent | null>(speech);
+  speechRef.current = speech;
   const callbacksRef = useRef({ onInteract, onExit, onTargetChange });
   callbacksRef.current = { onInteract, onExit, onTargetChange };
 
@@ -53,11 +78,18 @@ export function RoomCanvas({
     ctx.imageSmoothingEnabled = false;
 
     const solids = buildSolids(room);
-    const spawn = spawnPosition(room);
+    // Held/carried (movement locked): spawn in the arms of the first NPC
+    // instead of at the door. Otherwise spawn at the entry.
+    const firstNpc = [...room.objects.values()].find((o) => o.characterId !== undefined);
+    const spawn =
+      !controlsRef.current.canMove && firstNpc?.position !== undefined
+        ? { x: firstNpc.position.col * T + T / 2, y: firstNpc.position.row * T + T - 2 }
+        : spawnPosition(room);
     let player: PlayerSprite = { x: spawn.x, y: spawn.y, facing: "right", moving: false };
     let animClock = 0;
     let exited = false;
     let lastTarget: WorldObject | null = null;
+    let lastSpeechSeq = -1;
     const keys = new Set<string>();
     // Ambient speech: each NPC says their line once, when you first get close.
     const spoken = new Set<string>();
@@ -67,8 +99,12 @@ export function RoomCanvas({
       if (pausedRef.current) return;
       const key = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) e.preventDefault();
-      keys.add(key);
-      if ((key === "e" || key === " " || key === "enter") && lastTarget !== null) {
+      if (controlsRef.current.canMove) keys.add(key);
+      if (
+        controlsRef.current.canInteract &&
+        (key === "e" || key === " " || key === "enter") &&
+        lastTarget !== null
+      ) {
         callbacksRef.current.onInteract(lastTarget);
       }
     };
@@ -106,6 +142,27 @@ export function RoomCanvas({
     const frame = (): void => {
       animClock += 1;
 
+      // Spoken lines bubble up even while an input has the game paused —
+      // conversation replies arrive exactly then.
+      const speechEvent = speechRef.current;
+      if (speechEvent !== null && speechEvent.seq !== lastSpeechSeq) {
+        lastSpeechSeq = speechEvent.seq;
+        const speaker = [...room.objects.values()].find(
+          (o) =>
+            o.characterId !== undefined &&
+            o.label.toLowerCase() === speechEvent.targetLabel.toLowerCase() &&
+            o.position !== undefined,
+        );
+        if (speaker?.position !== undefined) {
+          bubbles.set(speaker.id, {
+            text: speechEvent.text.slice(0, 160),
+            x: speaker.position.col * T + T / 2,
+            y: speaker.position.row * T,
+            until: animClock + Math.min(600, 180 + speechEvent.text.length * 2),
+          });
+        }
+      }
+
       if (!pausedRef.current) {
         const dx = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
         const dy = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
@@ -124,7 +181,7 @@ export function RoomCanvas({
         // Dev/automation hook: live player position for scripted playtests.
         (window as unknown as Record<string, unknown>)["__playerPos"] = { x: player.x, y: player.y, facing: player.facing };
 
-        if (!exited && atExit(player, room)) {
+        if (controlsRef.current.canMove && !exited && atExit(player, room)) {
           exited = true;
           callbacksRef.current.onExit();
         }
@@ -195,8 +252,11 @@ export function RoomCanvas({
         } else {
           const r = sprite(object.assetId);
           if (r === null) continue;
+          // Floor coverings (rugs) lie flat — baseline 0 keeps them under
+          // every standing sprite, including the player.
+          const flat = FLAT_ASSETS.has(object.assetId);
           drawables.push({
-            baseline: row * T + r.sh,
+            baseline: flat ? 0 : row * T + r.sh,
             draw: () => {
               ctx.drawImage(atlas.image, r.sx, r.sy, r.sw, r.sh, col * T, row * T, r.sw, r.sh);
             },
@@ -226,15 +286,15 @@ export function RoomCanvas({
         const lines: string[] = [];
         let line = "";
         for (const word of words) {
-          if ((line + " " + word).trim().length > 24 && line.length > 0) {
+          if ((line + " " + word).trim().length > 26 && line.length > 0) {
             lines.push(line);
             line = word;
           } else {
             line = (line + " " + word).trim();
           }
-          if (lines.length === 2) break;
+          if (lines.length === 4) break;
         }
-        if (lines.length < 2 && line.length > 0) lines.push(line);
+        if (lines.length < 4 && line.length > 0) lines.push(line);
         const bw = Math.min(150, Math.max(...lines.map((l) => ctx.measureText(l).width)) + 10);
         const bh = lines.length * 11 + 7;
         const bx = Math.max(2, Math.min(W - bw - 2, bubble.x - bw / 2));

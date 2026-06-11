@@ -8,7 +8,7 @@
  * LifeEvents (isLifeEvent: true) are permanent anchors — never further compressed.
  */
 
-import type { Era, RoomId } from "./room.js";
+import type { Era, RoomDuration, RoomId } from "./room.js";
 import type { HiddenStatBlock } from "./player.js";
 
 export type PacingPreference = "slow" | "normal" | "fast";
@@ -63,6 +63,8 @@ export interface LifeContext {
   money: number;
   jobTitle: string | null;
   pacing: PacingPreference;
+  /** The time dial: player-chosen room duration. Absent = the story decides. */
+  preferredRoomDuration?: RoomDuration;
   /** True once the life has ended. The session becomes read-only. */
   deceased: boolean;
   causeOfDeath: string | null;
