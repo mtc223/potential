@@ -33,6 +33,9 @@ export interface RoomCanvasProps {
   canMove: boolean;
   /** Interact control unlocked (CONTROLS registry). */
   canInteract: boolean;
+  /** When true (held rooms only): the holder walks the player out to the
+   * exit, then onExit fires — the parent carries you to the next room. */
+  carryOut?: boolean;
   /** Latest spoken line — rendered as a bubble above the speaker. */
   speech?: SpeechEvent | null;
   onInteract: (target: WorldObject) => void;
@@ -42,6 +45,13 @@ export interface RoomCanvasProps {
 
 /** Floor coverings draw under everything — never over the player. */
 const FLAT_ASSETS = new Set(["rug"]);
+
+/**
+ * Internal supersampling: the canvas backing store is SCALE× the room's
+ * native pixels. Sprites scale crisply (integer nearest-neighbor); text is
+ * drawn in screen space at full resolution instead of being blown up.
+ */
+const SCALE = 3;
 
 /**
  * RoomCanvas — the pixel world. 32px tiles, 3/4 top-down, y-sorted sprites,
@@ -55,6 +65,7 @@ export function RoomCanvas({
   paused,
   canMove,
   canInteract,
+  carryOut = false,
   speech = null,
   onInteract,
   onExit,
@@ -65,6 +76,8 @@ export function RoomCanvas({
   pausedRef.current = paused;
   const controlsRef = useRef({ canMove, canInteract });
   controlsRef.current = { canMove, canInteract };
+  const carryOutRef = useRef(carryOut);
+  carryOutRef.current = carryOut;
   const speechRef = useRef<SpeechEvent | null>(speech);
   speechRef.current = speech;
   const callbacksRef = useRef({ onInteract, onExit, onTargetChange });
@@ -139,6 +152,8 @@ export function RoomCanvas({
 
     let raf = 0;
     let stopped = false;
+    let carryDx = 0;
+    let carryDone = false;
     const frame = (): void => {
       animClock += 1;
 
@@ -163,7 +178,22 @@ export function RoomCanvas({
         }
       }
 
-      if (!pausedRef.current) {
+      // The parent walks you out: the holder carries the player toward the
+      // exit, then the transition fires. Runs regardless of pause state.
+      if (carryOutRef.current && !carryDone && firstNpc?.position !== undefined) {
+        carryDx += 1.4;
+        const carrierX = firstNpc.position.col * T + T / 2 + carryDx;
+        player = { x: carrierX, y: firstNpc.position.row * T + T - 2, facing: "right", moving: true };
+        if (carrierX >= room.layout.widthTiles * T - 8) {
+          carryDone = true;
+          callbacksRef.current.onExit();
+        }
+      } else if (carryOutRef.current && !carryDone) {
+        carryDone = true;
+        callbacksRef.current.onExit();
+      }
+
+      if (!pausedRef.current && !carryOutRef.current) {
         const dx = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
         const dy = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
         if (dx !== 0 || dy !== 0) {
@@ -198,9 +228,11 @@ export function RoomCanvas({
         }
       }
 
-      // ── draw ──
+      // ── draw ── (sprites under a SCALE× transform; text in screen space)
       const W = room.layout.widthTiles * T;
       const H = room.layout.heightTiles * T;
+      ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+      ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, W, H);
 
       for (let row = 0; row < room.layout.heightTiles; row++)
@@ -228,11 +260,17 @@ export function RoomCanvas({
         if (object.position === undefined || object.assetId === undefined) continue;
         const { col, row } = object.position;
         if (object.category === "npc") {
-          const px = col * T;
+          const isCarrier = carryDx > 0 && object.id === firstNpc?.id;
+          const px = col * T + (isCarrier ? carryDx : 0);
           const py = row * T;
           drawables.push({
             baseline: py + T,
             draw: () => {
+              if (isCarrier) {
+                const step: 0 | 1 | 2 = ([0, 1, 0, 2] as const)[Math.floor(animClock / 9) % 4] ?? 0;
+                drawCharacter(object.assetId ?? "chr_adult_casual", characterFrame("right", step), px, py);
+                return;
+              }
               // NPCs face the player when close; otherwise face down.
               const ddx = player.x - (px + T / 2);
               const ddy = player.y - (py + T / 2);
@@ -275,13 +313,15 @@ export function RoomCanvas({
       drawables.sort((a, b) => a.baseline - b.baseline);
       for (const d of drawables) d.draw();
 
-      // Ambient speech bubbles.
+      // Speech bubbles — drawn in screen space so text renders at full
+      // resolution instead of being scaled up blurry.
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.font = `${String(9 * SCALE)}px monospace`;
       for (const [id, bubble] of bubbles) {
         if (animClock > bubble.until) {
           bubbles.delete(id);
           continue;
         }
-        ctx.font = "9px monospace";
         const words = bubble.text.split(" ");
         const lines: string[] = [];
         let line = "";
@@ -295,24 +335,26 @@ export function RoomCanvas({
           if (lines.length === 4) break;
         }
         if (lines.length < 4 && line.length > 0) lines.push(line);
-        const bw = Math.min(150, Math.max(...lines.map((l) => ctx.measureText(l).width)) + 10);
-        const bh = lines.length * 11 + 7;
-        const bx = Math.max(2, Math.min(W - bw - 2, bubble.x - bw / 2));
-        const by = Math.max(2, bubble.y - bh - 6);
+        const bw = Math.min(170 * SCALE, Math.max(...lines.map((l) => ctx.measureText(l).width)) + 10 * SCALE);
+        const bh = (lines.length * 11 + 7) * SCALE;
+        const cx = bubble.x * SCALE;
+        const bx = Math.max(2, Math.min(W * SCALE - bw - 2, cx - bw / 2));
+        const by = Math.max(2, bubble.y * SCALE - bh - 6 * SCALE);
         ctx.fillStyle = "#f2f2ee";
         ctx.fillRect(bx, by, bw, bh);
         ctx.strokeStyle = "#23213a";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+        ctx.lineWidth = SCALE;
+        ctx.strokeRect(bx, by, bw, bh);
         ctx.fillStyle = "#23213a";
-        ctx.fillRect(bubble.x - 2, by + bh, 4, 4); // tail
+        ctx.fillRect(cx - 2 * SCALE, by + bh, 4 * SCALE, 4 * SCALE); // tail
         lines.forEach((l, i) => {
-          ctx.fillText(l, bx + 5, by + 13 + i * 11);
+          ctx.fillText(l, bx + 5 * SCALE, by + (13 + i * 11) * SCALE);
         });
       }
 
-      // Interaction target brackets.
-      if (lastTarget?.position !== undefined && !pausedRef.current) {
+      // Interaction target brackets (back under the room-space transform).
+      ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+      if (lastTarget?.position !== undefined && !pausedRef.current && controlsRef.current.canInteract) {
         const r = lastTarget.assetId !== undefined ? sprite(lastTarget.assetId) : null;
         const w = lastTarget.category === "npc" ? T : (r?.sw ?? T);
         const h = lastTarget.category === "npc" ? T : (r?.sh ?? T);
@@ -376,8 +418,8 @@ export function RoomCanvas({
   return (
     <canvas
       ref={canvasRef}
-      width={room.layout.widthTiles * T}
-      height={room.layout.heightTiles * T}
+      width={room.layout.widthTiles * T * SCALE}
+      height={room.layout.heightTiles * T * SCALE}
       style={{
         imageRendering: "pixelated",
         width: "100%",

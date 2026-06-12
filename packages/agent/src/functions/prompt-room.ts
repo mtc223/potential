@@ -8,6 +8,7 @@ import {
   validateLLMOutput,
   type CharacterRecord,
   type LifeContext,
+  type PlaceRecord,
   type RoomCandidate,
   type RoomLLMOutput,
 } from "@potential/shared";
@@ -26,6 +27,7 @@ export async function promptRoom(
   context: LifeContext,
   candidate: RoomCandidate,
   rosterCharacters: CharacterRecord[],
+  knownPlaces: PlaceRecord[] = [],
 ): Promise<RoomLLMOutput> {
   const vocabulary = buildVocabulary(candidate.concept + " " + candidate.premise);
   const roster = rosterCharacters
@@ -34,6 +36,12 @@ export async function promptRoom(
     .map(
       (c) =>
         `- ${c.name} (${c.role}, age ${String(Math.round(c.age))}): ${c.personality}. Their memory of the player: ${c.memorySummary || "none yet"}`,
+    )
+    .join("\n");
+  const places = knownPlaces
+    .map(
+      (p) =>
+        `- ${p.id} ("${p.label}"): ${p.sizeTemplate} | ${p.floorAssetId} | ${p.wallAssetId} | ${p.layoutScript}`,
     )
     .join("\n");
 
@@ -51,6 +59,8 @@ Rules:
 - Promote only 2–4 story-relevant items to OBJ lines with evocative interaction text that rewards curiosity.
 - Hunger is a real mechanic: when the scene plausibly includes food or drink (kitchens, meals, a bottle by the crib, a lunchbox), make 1–2 of the OBJ items consumable (eat/drink).
 - Cast 0–4 CHR characters. REUSE roster characters by exact name when the situation involves people the player knows. New names create new people. NEVER cast the player — their sprite is rendered by the engine. Every character gets a DIFFERENT sprite assetId (variants _b/_c/_d are different looks of the same archetype).
+- PLACES PERSIST: when this scene returns to a KNOWN PLACE below, declare its slug and reproduce its size/floor/wall/layout (small evolutions allowed — a new photo, a moved chair). When this is a NEW location life will plausibly return to (a home room, a workplace, a school room), coin a new slug. One-off scenes: PLACE none.
+- Interaction and narration text must match the player's developmental stage. An infant perceives warmth, color, faces, hunger — not symbols, names, or their own reflection. No self-recognition before ~2, no reading before ~5.
 - Respect the player's age tier strictly.
 
 Size templates (width x height in tiles): ${Object.entries(GAME_CONFIG.roomGeneration.sizeTemplates)
@@ -62,6 +72,7 @@ ${ROOM_SCRIPT_FORMAT}`;
   const extra = [
     `ASSET VOCABULARY:\nFloors: ${vocabulary.floors}\nWalls: ${vocabulary.walls}\nObjects: ${vocabulary.objects}\nCharacter sprites: ${vocabulary.characters}`,
     roster.length > 0 ? `KNOWN CHARACTERS (roster):\n${roster}` : "",
+    places.length > 0 ? `KNOWN PLACES (reuse layout when life returns to one):\n${places}` : "",
   ]
     .filter((s) => s.length > 0)
     .join("\n\n");

@@ -2,6 +2,7 @@
 // All packages import from here. Never import between sibling packages directly.
 
 export * from "./types/world-object.js";
+export * from "./types/place.js";
 export * from "./types/room.js";
 export * from "./types/player.js";
 export * from "./types/character.js";

@@ -9,10 +9,17 @@ import { ValenceFloat } from "./common.schema.js";
  * the LLM never writes ids or clock values.
  */
 export const CompressPlayerMemorySchema = z.object({
-  /** 1–2 sentence human-readable summary. Journal-facing. */
-  narrative: z.string().min(1).max(400),
+  /** 1–2 sentence human-readable summary. Journal-facing. Narrative strings
+   * clamp instead of reject — a wordy model must never break a transition. */
+  narrative: z
+    .string()
+    .min(1)
+    .transform((s) => (s.length > 400 ? `${s.slice(0, 397)}…` : s)),
   /** How the player behaved — choices, tone, patterns. */
-  behavioralSignal: z.string().min(1).max(300),
+  behavioralSignal: z
+    .string()
+    .min(1)
+    .transform((s) => (s.length > 300 ? `${s.slice(0, 297)}…` : s)),
   tags: z.array(z.string().max(40)).max(10),
   emotionalValence: ValenceFloat,
   /** True only for genuinely formative rooms — births, deaths, firsts. */

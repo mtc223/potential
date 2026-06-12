@@ -35,6 +35,7 @@ export class RoomScriptError extends Error {
 /** The grammar block included in the prompt_room task instructions. */
 export const ROOM_SCRIPT_FORMAT = `OUTPUT FORMAT — room script, one declaration per line. NOT JSON. No prose outside the script.
 ROOM <label> | <tiny|small|medium|large|wide|tall> | <floor assetId> | <wall assetId> | <day|week|month|year>
+PLACE <slug or none>   (recurring locations get a stable snake_case slug like home_nursery; one-off scenes: none)
 SIT <the situation — 1-3 vivid present-tense sentences with stakes; shown to the player as opening narration>
 MONO <the player's first inner thought here; their nature colors it, never named stats>
 SET <assetId>@<col>,<row> <assetId>@<col>,<row> ...   (set dressing — names/solidity come from the catalog; repeat the line as needed)
@@ -43,6 +44,7 @@ CHR <name> | <role> | <age> | <sprite assetId>@<col>,<row> | <personality phrase
 
 Example:
 ROOM First Morning Home | small | floor_wood | wall_wallpaper | day
+PLACE home_nursery
 SIT The nursery is finally quiet. Sunlight crosses the crib where you ended up at dawn, and the whole house seems to be holding its breath.
 MONO The warm ones are nearby. The light through the window is the best thing that has ever happened.
 SET crib@5,1 rocking_chair@2,2 bookshelf@8,1 houseplant@10,1 floor_lamp@1,1 rug@5,4
@@ -71,6 +73,7 @@ export function parseRoomScript(raw: string, era: Era): unknown {
   let header: { label: string; sizeTemplate: string; floorAssetId: string; wallAssetId: string; duration: string } | null = null;
   let situation = "";
   let monologue = "";
+  let placeId: string | null = null;
   const objects: unknown[] = [];
   const characters: unknown[] = [];
 
@@ -88,6 +91,9 @@ export function parseRoomScript(raw: string, era: Era): unknown {
         wallAssetId: f[3] ?? "wall_plaster",
         duration: f[4] ?? "day",
       };
+    } else if (tag === "PLACE") {
+      const slug = rest.toLowerCase().trim();
+      if (slug !== "none" && /^[a-z0-9_]+$/.test(slug)) placeId = slug.slice(0, 40);
     } else if (tag === "SIT") {
       situation = clamp(situation.length > 0 ? `${situation} ${rest}` : rest, 400);
     } else if (tag === "MONO") {
@@ -126,6 +132,7 @@ export function parseRoomScript(raw: string, era: Era): unknown {
 
   return {
     label: header.label,
+    ...(placeId !== null ? { placeId } : {}),
     description: situation,
     situation,
     era,

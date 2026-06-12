@@ -91,12 +91,13 @@ export async function endLife(
 export async function clearLife(dbInstance: LifeSimDb = defaultDb): Promise<void> {
   await dbInstance.transaction(
     "rw",
-    [dbInstance.rooms, dbInstance.currentLife, dbInstance.characters, dbInstance.lifeContext],
+    [dbInstance.rooms, dbInstance.currentLife, dbInstance.characters, dbInstance.lifeContext, dbInstance.places],
     async () => {
       await dbInstance.rooms.clear();
       await dbInstance.currentLife.clear();
       await dbInstance.characters.clear();
       await dbInstance.lifeContext.clear();
+      await dbInstance.places.clear();
     },
   );
 }

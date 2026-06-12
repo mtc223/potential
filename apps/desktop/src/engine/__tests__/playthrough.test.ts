@@ -109,6 +109,21 @@ describe("10-room end-to-end smoke test (#15)", () => {
     }
   });
 
+  it("picking up an item is local: tombstoned, de-positioned, inventoried — no LLM call", async () => {
+    await engine.startNewLife(startParams);
+    const item = [...currentRoom().objects.values()].find(
+      (o) => o.characterId === undefined && o.position !== undefined,
+    );
+    const target = must(item, "an object to pick up");
+    const before = (engine.adapter as MockAdapter).callsTo("interaction_result");
+    engine.pickUp(target);
+    expect(target.tombstoned).toBe(true);
+    expect(target.position).toBeUndefined();
+    expect(engine.context?.inventory).toContain(target.label);
+    expect((engine.adapter as MockAdapter).callsTo("interaction_result")).toBe(before);
+    expect(currentRoom().events.some((e) => e.type === "item")).toBe(true);
+  });
+
   it("crying records an event and the care response feeds the baby", async () => {
     await engine.startNewLife(startParams);
     const before = must(engine.context, "context").hunger;
@@ -129,8 +144,13 @@ describe("10-room end-to-end smoke test (#15)", () => {
       if (req.fn === "generate_candidates") sawDial = req.system.task.includes('TIME DIAL') && req.system.task.includes('"year"');
       return mock.complete(req);
     };
-    await engine.transition();
+    const next = await engine.transition();
     expect(sawDial).toBe(true);
+    // The dial is authoritative: whatever the model proposed, the room is a year.
+    expect(next.duration).toBe("year");
+    // Time credits on exit — living through the year room ages the player.
+    await engine.transition();
+    expect(must(engine.context, "ctx").playerAgeYears).toBeGreaterThanOrEqual(1);
 
     await engine.setTimeDial(undefined);
     expect(must(await loadLifeContext(db), "ctx").preferredRoomDuration).toBeUndefined();

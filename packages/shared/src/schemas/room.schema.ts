@@ -54,6 +54,12 @@ export const RoomCharacterLLMSchema = z.object({
 
 export const RoomSchema = z.object({
   label: z.string().min(1).max(80),
+  /** Recurring-place slug ("home_nursery"). Absent/none = one-off location. */
+  placeId: z
+    .string()
+    .max(40)
+    .regex(/^[a-z0-9_]+$/)
+    .optional(),
   description: LongText,
   /** What is happening here. Presents, never prescribes. */
   situation: MediumText,

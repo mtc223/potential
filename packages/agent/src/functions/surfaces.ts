@@ -29,6 +29,13 @@ export async function generateRoomMessages(
     .filter((o) => o.category === "npc")
     .map((o) => o.label);
 
+  const playerNote =
+    context.playerAgeYears < 1
+      ? "The player is a newborn: they cannot move, act, or speak — only cry. NPCs talk to each other, about the baby, or coo at the baby."
+      : context.playerAgeYears < 4
+        ? "The player is a small child with limited speech and mobility."
+        : "";
+
   const task = `Generate ambient messages for this room session — the room breathing while the player is in it.
 
 ROOM: ${room.label} — ${room.situation}
@@ -37,8 +44,10 @@ CHARACTERS PRESENT: ${characterNames.length > 0 ? characterNames.join(", ") : "n
 Rules:
 - 3-8 messages spread across the first ~5 minutes (atSeconds).
 - npc_line: something a present character says aloud, unprompted. characterName must match exactly.
+- NEVER script, narrate, or react to player actions — the player acts for themselves and may be doing nothing at all. NPCs talk to each other, to themselves, or address the player without presuming a response.
 - monologue: the player's inner voice — observations, feelings. Hidden stats surface here as texture, never as numbers.
 - ambient: background events ("somewhere, a phone rings").
+${playerNote.length > 0 ? `- ${playerNote}` : ""}
 
 JSON shape: {"messages": [{"kind": "npc_line|monologue|ambient", "characterName": str?, "text": str, "atSeconds": num}]}`;
 

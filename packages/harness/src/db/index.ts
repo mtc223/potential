@@ -12,3 +12,4 @@ export {
   setCharacterStatus,
 } from "./character-store.js";
 export { saveLifeContext, loadLifeContext } from "./life-context-store.js";
+export { upsertPlace, getPlace, getRecentPlaces } from "./place-store.js";

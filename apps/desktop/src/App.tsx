@@ -72,9 +72,13 @@ export default function App(): JSX.Element {
   const [generating, setGenerating] = useState<string | null>(null);
   const [phone, setPhone] = useState<SocialFeedLLMOutput | null | "loading">(null);
   const [speech, setSpeech] = useState<SpeechEvent | null>(null);
+  const [carryOut, setCarryOut] = useState(false);
   const engineRef = useRef<GameEngine | null>(null);
   const speechSeqRef = useRef(0);
   const lastCryAtRef = useRef(0);
+  // Per-NPC conversation history, so returning to WASD between lines does
+  // not amnesia the exchange. Cleared on room change.
+  const conversationsRef = useRef(new Map<string, { speaker: "player" | "character"; text: string }[]>());
 
   const speakBubble = useCallback((targetLabel: string, text: string) => {
     speechSeqRef.current += 1;
@@ -188,6 +192,8 @@ export default function App(): JSX.Element {
     if (room === null || context === null || engine === null) return;
     if (messagesRoomRef.current === room.id) return;
     messagesRoomRef.current = room.id;
+    setCarryOut(false);
+    conversationsRef.current.clear();
     const timers: ReturnType<typeof setTimeout>[] = [];
     generateRoomMessages(engine.adapter, context, room)
       .then(({ messages }) => {
@@ -217,21 +223,21 @@ export default function App(): JSX.Element {
   // forward. Crying resets the clock.
   const canMove = context !== null && isControlUnlocked("move", context);
   useEffect(() => {
-    if (room === null || canMove) return;
+    if (room === null || canMove || carryOut) return;
     if (bottom.kind !== "explore" || generating !== null) return;
     lastCryAtRef.current = Date.now();
     const interval = setInterval(() => {
       if (Date.now() - lastCryAtRef.current < 10000) return;
       clearInterval(interval);
-      const engine = engineRef.current;
-      if (engine === null) return;
       pushMonologue("The grown-ups stir, gather their things. The world is about to change again.");
-      void runGenerating(() => engine.transition());
+      // The parent walks you out — the canvas animates the carry, then
+      // onExit fires the transition.
+      setCarryOut(true);
     }, 500);
     return () => {
       clearInterval(interval);
     };
-  }, [room, canMove, bottom.kind, generating, pushMonologue, runGenerating]);
+  }, [room, canMove, carryOut, bottom.kind, generating, pushMonologue]);
 
   // ── screens ──────────────────────────────────────────────────────────
 
@@ -381,11 +387,19 @@ export default function App(): JSX.Element {
   const handleInteract = (object: WorldObject): void => {
     if (engine === null || paused) return;
     if (object.characterId !== undefined) {
-      setBottom({ kind: "converse", npc: object, history: [] });
+      setBottom({ kind: "converse", npc: object, history: conversationsRef.current.get(object.id) ?? [] });
       return;
     }
     playObjectCue(object.audio, object.label);
     const interaction = object.interaction;
+    if (interaction?.type === "pick_up") {
+      // Local action — no LLM call for grabbing a toy.
+      engine.pickUp(object);
+      syncFromEngine();
+      setTarget(null);
+      pushMonologue(`You take the ${object.label.toLowerCase()}. Yours now.`);
+      return;
+    }
     if (interaction?.text !== undefined && interaction.type === "examine") {
       // Examine with canned text: free, instant, no LLM call.
       engine.recordEvent({
@@ -426,13 +440,11 @@ export default function App(): JSX.Element {
           { speaker: "character" as const, text: response.dialogue },
         ];
         playBark(response.dialogue, character.name);
-        // Spoken words live above the speaker's head, not in a bottom box.
-        speakBubble(character.name, response.dialogue);
-        setBottom(
-          response.endsConversation
-            ? { kind: "explore" }
-            : { kind: "converse", npc, history: newHistory },
-        );
+        // Spoken words live above the speaker's head, not in a bottom box —
+        // and you go straight back to WASD. Press E again to keep talking;
+        // the exchange is remembered per character for this room.
+        conversationsRef.current.set(npc.id, newHistory.slice(-12));
+        setBottom({ kind: "explore" });
       } catch (error) {
         pushMonologue(`(${error instanceof Error ? error.message : "they didn't hear you"})`);
         setBottom({ kind: "explore" });
@@ -572,8 +584,16 @@ export default function App(): JSX.Element {
               }}
             />
             <span style={{ color: "#8d889f", fontFamily: "monospace", fontSize: 12 }}>
-              {context.playerName} · {Math.floor(context.playerAgeYears)}y · ${Math.round(context.money)} · {context.worldDate}
+              {context.playerName} · {formatAge(context.playerAgeYears)} · ${Math.round(context.money)} · {context.worldDate}
             </span>
+            {(context.inventory?.length ?? 0) > 0 && (
+              <span
+                title={(context.inventory ?? []).join(", ")}
+                style={{ color: "#e3c350", fontFamily: "monospace", fontSize: 12, cursor: "help" }}
+              >
+                inv {context.inventory?.length}
+              </span>
+            )}
             <StatBar value={context.health} color="#c54e44" label="HP" />
             <StatBar value={context.hunger} color="#5d9e4c" label="F" />
           </div>
@@ -590,6 +610,7 @@ export default function App(): JSX.Element {
             paused={paused}
             canMove={canMove}
             canInteract={canInteract}
+            carryOut={carryOut}
             speech={speech}
             onInteract={handleInteract}
             onExit={() => {
@@ -924,6 +945,12 @@ function TimeDial({
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────
+
+/** Under 2 the HUD shows months — "0y" for half a year reads as a bug. */
+function formatAge(years: number): string {
+  if (years < 2) return `${String(Math.max(0, Math.round(years * 12)))}mo`;
+  return `${String(Math.floor(years))}y`;
+}
 
 function playerAsset(age: number): string {
   if (age < 1) return "chr_baby";

@@ -19,11 +19,13 @@ import {
   exitRoom,
   getActiveCharacters,
   getCharacter,
+  getRecentPlaces,
   getTailRoom,
   loadLifeContext,
   saveLifeContext,
   startLife,
   upsertCharacter,
+  upsertPlace,
   type LifeSimDb,
   db as defaultDb,
 } from "@potential/harness";
@@ -84,6 +86,7 @@ export class GameEngine {
     const output = await promptRoom(this.adapter, this.context, birthCandidate, []);
     const built = buildRoom(output, birthCandidate, this.context, null, []);
     await this.persistUpserts(built.characterUpserts);
+    await this.rememberPlace(output, 0);
 
     this.currentRoom = built.room;
     this.roomEntryAt = Date.now();
@@ -107,11 +110,18 @@ export class GameEngine {
 
     this.events.onGenerationPhase?.("The world re-forms around you…");
     const { candidates } = await generateCandidates(this.adapter, context);
-    const chosen = await selectCandidate(this.adapter, context, candidates);
-    const roster = await getActiveCharacters(this.db);
-    const output = await promptRoom(this.adapter, context, chosen, roster);
+    let chosen = await selectCandidate(this.adapter, context, candidates);
+    if (context.preferredRoomDuration !== undefined) {
+      chosen = { ...chosen, duration: context.preferredRoomDuration };
+    }
+    const [roster, knownPlaces] = await Promise.all([
+      getActiveCharacters(this.db),
+      getRecentPlaces(8, this.db),
+    ]);
+    const output = await promptRoom(this.adapter, context, chosen, roster, knownPlaces);
     const built = buildRoom(output, chosen, context, tail, roster);
     await this.persistUpserts(built.characterUpserts);
+    await this.rememberPlace(output, built.room.sequenceIndex);
 
     this.currentRoom = built.room;
     this.roomEntryAt = Date.now();
@@ -164,19 +174,73 @@ export class GameEngine {
     const selectionWork = generateCandidates(this.adapter, context, intentSignal).then(
       ({ candidates }) => selectCandidate(this.adapter, context, candidates),
     );
-    const [chosen] = await Promise.all([selectionWork, characterWork ?? Promise.resolve()]);
+    let [chosen] = await Promise.all([selectionWork, characterWork ?? Promise.resolve()]);
+    // The time dial is authoritative, not advisory — the prompt nudges the
+    // model, the harness enforces. Without this, "year" produced month rooms.
+    if (context.preferredRoomDuration !== undefined) {
+      chosen = { ...chosen, duration: context.preferredRoomDuration };
+    }
 
     // 4. Fabrication — roster read AFTER character updates persist.
     this.events.onGenerationPhase?.("The next room assembles itself…");
-    const roster = await getActiveCharacters(this.db);
-    const output = await promptRoom(this.adapter, context, chosen, roster);
+    const [roster, knownPlaces] = await Promise.all([
+      getActiveCharacters(this.db),
+      getRecentPlaces(8, this.db),
+    ]);
+    const output = await promptRoom(this.adapter, context, chosen, roster, knownPlaces);
     const built = buildRoom(output, chosen, context, this.mustRoom(), roster);
     await this.persistUpserts(built.characterUpserts);
+    await this.rememberPlace(output, built.room.sequenceIndex);
 
     this.currentRoom = built.room;
     this.roomEntryAt = Date.now();
     this.events.onMonologue?.(output.openingMonologue);
     return built.room;
+  }
+
+  /**
+   * Places persist even though rooms never do: when a room declares a
+   * placeId, remember its layout so home looks like home forever.
+   */
+  private async rememberPlace(
+    output: { placeId?: string | undefined; label: string; sizeTemplate: Room["layout"]["sizeTemplate"]; floorAssetId: string; wallAssetId: string; objects: { assetId: string; position: { col: number; row: number } }[] },
+    sequenceIndex: number,
+  ): Promise<void> {
+    if (output.placeId === undefined) return;
+    const layoutScript = output.objects
+      .map((o) => `${o.assetId}@${String(o.position.col)},${String(o.position.row)}`)
+      .join(" ");
+    await upsertPlace(
+      {
+        id: output.placeId,
+        label: output.label,
+        sizeTemplate: output.sizeTemplate,
+        floorAssetId: output.floorAssetId,
+        wallAssetId: output.wallAssetId,
+        layoutScript,
+        lastSeenSequence: sequenceIndex,
+      },
+      this.db,
+    );
+  }
+
+  /**
+   * Pick up a small item — a local action, no LLM call. The object is
+   * tombstoned (never removed — referential integrity) and loses its
+   * position, so it stops rendering; the label joins the inventory.
+   */
+  pickUp(object: WorldObject): void {
+    const context = this.mustContext();
+    object.tombstoned = true;
+    delete object.position;
+    this.context = { ...context, inventory: [...(context.inventory ?? []), object.label] };
+    this.recordEvent({
+      type: "item",
+      description: `Picked up ${object.label}`,
+      playerChoice: "pick_up",
+      outcome: `${object.label} is yours now.`,
+      characterIds: [],
+    });
   }
 
   /**

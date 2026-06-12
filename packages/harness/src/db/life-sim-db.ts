@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { CharacterRecord, LifeContext, PlayerIdentity, Room } from "@potential/shared";
+import type { CharacterRecord, LifeContext, PlaceRecord, PlayerIdentity, Room } from "@potential/shared";
 
 /**
  * StoredCurrentLife — PlayerIdentity keyed with a fixed id for single-record storage.
@@ -69,6 +69,12 @@ export class LifeSimDb extends Dexie {
   lifeContext!: Table<StoredLifeContext, 1>;
 
   /**
+   * Remembered recurring locations. Rooms are never revisited (open-path),
+   * but places persist — home looks like home every time life returns.
+   */
+  places!: Table<PlaceRecord, PlaceRecord["id"]>;
+
+  /**
    * @param name - DB name. Override in tests for isolation (default: "LifeSimulator").
    */
   constructor(name = "LifeSimulator") {
@@ -93,6 +99,15 @@ export class LifeSimDb extends Dexie {
       currentLife: "id",
       characters: "id, status, role",
       lifeContext: "id",
+    });
+
+    // v4 — remembered places (recurring location layouts).
+    this.version(4).stores({
+      rooms: "id, sequenceIndex, previousRoomId, exitedAt, nextRoomId",
+      currentLife: "id",
+      characters: "id, status, role",
+      lifeContext: "id",
+      places: "id, lastSeenSequence",
     });
   }
 }

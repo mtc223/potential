@@ -403,6 +403,7 @@ describe("prompt_room post-validation", () => {
 
 describe("room script language", () => {
   const script = `ROOM First Morning Home | small | floor_wood | wall_wallpaper | day
+PLACE home_nursery
 SIT The nursery is finally quiet. Sunlight crosses the crib.
 MONO The warm ones are nearby.
 SET crib@5,1 rocking_chair@2,2 houseplant@10,1
@@ -422,6 +423,7 @@ SET not_a_position also@noise broken@1 toy_chest@8,1`;
     expect(room.openingMonologue).toBe("The warm ones are nearby.");
     expect(room.era).toBe("modern"); // injected from context, not the model
     expect(room.duration).toBe("day");
+    expect(room.placeId).toBe("home_nursery");
     // 5 SET + 1 OBJ + 1 salvaged toy chest from the noisy SET line.
     expect(room.objects).toHaveLength(7);
     expect(room.characters).toHaveLength(2);
