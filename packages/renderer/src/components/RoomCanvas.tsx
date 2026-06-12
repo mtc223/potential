@@ -101,6 +101,7 @@ export function RoomCanvas({
     let player: PlayerSprite = { x: spawn.x, y: spawn.y, facing: "right", moving: false };
     let animClock = 0;
     let exited = false;
+    let sitting = false;
     let lastTarget: WorldObject | null = null;
     let lastSpeechSeq = -1;
     const keys = new Set<string>();
@@ -112,6 +113,9 @@ export function RoomCanvas({
       if (pausedRef.current) return;
       const key = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) e.preventDefault();
+      // Shift toggles sitting: settle in place, shuffle side to side a
+      // little, press Shift again to stand and walk.
+      if (e.key === "Shift" && !e.repeat && controlsRef.current.canMove) sitting = !sitting;
       if (controlsRef.current.canMove) keys.add(key);
       if (
         controlsRef.current.canInteract &&
@@ -195,9 +199,13 @@ export function RoomCanvas({
 
       if (!pausedRef.current && !carryOutRef.current) {
         const dx = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
-        const dy = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
+        // Sitting: feet stay planted — only a slow side-to-side shuffle.
+        const dy = sitting
+          ? 0
+          : (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
         if (dx !== 0 || dy !== 0) {
-          player = movePlayer(player, dx, dy, room, solids, speedForAsset(playerAssetId));
+          const speed = speedForAsset(playerAssetId) * (sitting ? 0.35 : 1);
+          player = movePlayer(player, dx, dy, room, solids, speed);
         } else if (player.moving) {
           player = { ...player, moving: false };
         }
@@ -305,6 +313,11 @@ export function RoomCanvas({
       drawables.push({
         baseline: player.y + 2,
         draw: () => {
+          if (sitting) {
+            // Settled: down-facing stand frame, dropped a few pixels.
+            drawCharacter(playerAssetId, characterFrame("down", 0), player.x - T / 2, player.y - T + 8);
+            return;
+          }
           const step: 0 | 1 | 2 = player.moving ? (([0, 1, 0, 2] as const)[Math.floor(animClock / 9) % 4] ?? 0) : 0;
           drawCharacter(playerAssetId, characterFrame(player.facing, step), player.x - T / 2, player.y - T + 4);
         },

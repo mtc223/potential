@@ -443,6 +443,7 @@ export default function App(): JSX.Element {
         // Spoken words live above the speaker's head, not in a bottom box —
         // and you go straight back to WASD. Press E again to keep talking;
         // the exchange is remembered per character for this room.
+        speakBubble(character.name, response.dialogue);
         conversationsRef.current.set(npc.id, newHistory.slice(-12));
         setBottom({ kind: "explore" });
       } catch (error) {
@@ -664,7 +665,7 @@ export default function App(): JSX.Element {
               {target !== null && canInteract
                 ? `[E] ${target.characterId !== undefined ? "Talk to" : target.interaction?.type === "examine" ? "Examine" : "Use"} ${target.label}`
                 : canMove
-                  ? "WASD/arrows to move · walk right to move on with life"
+                  ? "WASD/arrows to move · Shift to sit · walk right to move on with life"
                   : "You are small. The world carries you."}
             </span>
             {canCry && (
