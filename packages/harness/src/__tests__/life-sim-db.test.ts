@@ -1,7 +1,40 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { PlayerStats, RoomId } from "@potential/shared";
+import type { PlayerStats, Room, RoomId } from "@potential/shared";
 import { LifeSimDb, type StoredCurrentLife } from "../db/life-sim-db.js";
+
+const baseLayout: Room["layout"] = {
+  widthTiles: 13,
+  heightTiles: 8,
+  sizeTemplate: "medium",
+  floorAssetId: "floor_wood",
+  wallAssetId: "wall_plaster",
+  entryTile: { col: 0, row: 4 },
+  exitTile: { col: 12, row: 4 },
+};
+
+function makeRoom(overrides: Partial<Room> = {}): Room {
+  return {
+    id: `room_test-${crypto.randomUUID()}` as RoomId,
+    sequenceIndex: 0,
+    previousRoomId: null,
+    nextRoomId: null,
+    label: "Test Room",
+    description: "A test room.",
+    situation: "The room is quiet.",
+    objects: new Map(),
+    layout: baseLayout,
+    duration: "day",
+    playerAgeYears: 0,
+    worldDate: "1985-06-15",
+    events: [],
+    summary: null,
+    era: "modern",
+    createdAt: Date.now(),
+    exitedAt: null,
+    ...overrides,
+  };
+}
 
 let testDb: LifeSimDb;
 
@@ -100,48 +133,24 @@ describe("LifeSimDb — currentLife table", () => {
 
 describe("LifeSimDb — rooms table", () => {
   it("stores and retrieves a room by id", async () => {
-    const id = "room_test-1" as RoomId;
-    await testDb.rooms.add({
-      id,
-      sequenceIndex: 0,
-      previousRoomId: null,
-      nextRoomId: null,
-      label: "Birth Room",
-      description: "The beginning.",
-      objects: new Map(),
-      summary: "It begins.",
-      era: "modern",
-      createdAt: Date.now(),
-      exitedAt: Date.now() + 1000,
-    });
-    const room = await testDb.rooms.get(id);
-    expect(room?.id).toBe(id);
-    expect(room?.sequenceIndex).toBe(0);
-    expect(room?.previousRoomId).toBeNull();
-    expect(room?.nextRoomId).toBeNull();
+    const room = makeRoom({ label: "Birth Room", description: "The beginning.", summary: "It begins.", exitedAt: Date.now() + 1000 });
+    await testDb.rooms.add(room);
+    const retrieved = await testDb.rooms.get(room.id);
+    expect(retrieved?.id).toBe(room.id);
+    expect(retrieved?.sequenceIndex).toBe(0);
+    expect(retrieved?.previousRoomId).toBeNull();
+    expect(retrieved?.nextRoomId).toBeNull();
   });
 
   it("preserves Map<ObjectId, WorldObject> via Structured Clone", async () => {
-    const id = "room_test-2" as RoomId;
     const objects = new Map([
       ["obj_npc1" as const, { id: "obj_npc1" as const, category: "npc" as const, label: "Guard", description: "", tags: [], tombstoned: false }],
     ]);
-    await testDb.rooms.add({
-      id,
-      sequenceIndex: 0,
-      previousRoomId: null,
-      nextRoomId: null,
-      label: "Room with NPC",
-      description: "",
-      objects,
-      summary: "A guard stands watch.",
-      era: "medieval",
-      createdAt: Date.now(),
-      exitedAt: Date.now() + 500,
-    });
-    const room = await testDb.rooms.get(id);
-    expect(room?.objects).toBeInstanceOf(Map);
-    expect(room?.objects.get("obj_npc1")?.label).toBe("Guard");
+    const room = makeRoom({ label: "Room with NPC", objects, era: "medieval", summary: "A guard stands watch.", exitedAt: Date.now() + 500 });
+    await testDb.rooms.add(room);
+    const retrieved = await testDb.rooms.get(room.id);
+    expect(retrieved?.objects).toBeInstanceOf(Map);
+    expect(retrieved?.objects.get("obj_npc1")?.label).toBe("Guard");
   });
 });
 

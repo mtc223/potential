@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { PlayerIdentity, Room } from "@potential/shared";
+import type { CharacterRecord, LifeContext, PlaceRecord, PlayerIdentity, Room } from "@potential/shared";
 
 /**
  * StoredCurrentLife — PlayerIdentity keyed with a fixed id for single-record storage.
@@ -11,6 +11,12 @@ import type { PlayerIdentity, Room } from "@potential/shared";
  * absence signals character creation. Both paths are handled by the session layer, not here.
  */
 export type StoredCurrentLife = PlayerIdentity & { readonly id: 1 };
+
+/**
+ * StoredLifeContext — LifeContext keyed with a fixed id for single-record storage.
+ * Mirrors the currentLife pattern: id=1 is always the sole record.
+ */
+export type StoredLifeContext = LifeContext & { readonly id: 1 };
 
 /**
  * LifeSimDb — Dexie schema for Life Simulator.
@@ -51,6 +57,24 @@ export class LifeSimDb extends Dexie {
   currentLife!: Table<StoredCurrentLife, 1>;
 
   /**
+   * Persistent character roster for the active life. Characters are never
+   * deleted — status-transitioned only (active | inactive | deceased | blocked).
+   */
+  characters!: Table<CharacterRecord, CharacterRecord["id"]>;
+
+  /**
+   * Single-record store for the accumulated LifeContext.
+   * Always keyed at id=1. Rewritten on every room exit (compression heartbeat).
+   */
+  lifeContext!: Table<StoredLifeContext, 1>;
+
+  /**
+   * Remembered recurring locations. Rooms are never revisited (open-path),
+   * but places persist — home looks like home every time life returns.
+   */
+  places!: Table<PlaceRecord, PlaceRecord["id"]>;
+
+  /**
    * @param name - DB name. Override in tests for isolation (default: "LifeSimulator").
    */
   constructor(name = "LifeSimulator") {
@@ -67,6 +91,23 @@ export class LifeSimDb extends Dexie {
     this.version(2).stores({
       rooms: "id, sequenceIndex, previousRoomId, exitedAt, nextRoomId",
       currentLife: "id",
+    });
+
+    // v3 — character roster + single-record LifeContext store.
+    this.version(3).stores({
+      rooms: "id, sequenceIndex, previousRoomId, exitedAt, nextRoomId",
+      currentLife: "id",
+      characters: "id, status, role",
+      lifeContext: "id",
+    });
+
+    // v4 — remembered places (recurring location layouts).
+    this.version(4).stores({
+      rooms: "id, sequenceIndex, previousRoomId, exitedAt, nextRoomId",
+      currentLife: "id",
+      characters: "id, status, role",
+      lifeContext: "id",
+      places: "id, lastSeenSequence",
     });
   }
 }

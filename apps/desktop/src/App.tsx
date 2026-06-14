@@ -1,11 +1,985 @@
-// Life Simulator — desktop entry point
-// Tauri shell wrapping the React renderer
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ASSET_CATALOG,
+  GAME_CONFIG,
+  babbleize,
+  isControlUnlocked,
+  isPreverbal,
+  sanitizeName,
+  type Era,
+  type LifeContext,
+  type Room,
+  type RoomDuration,
+  type SocialFeedLLMOutput,
+  type WorldObject,
+} from "@potential/shared";
+import { hasResumableLife } from "@potential/harness";
+import {
+  AnthropicAdapter,
+  MockAdapter,
+  clearApiKey,
+  generateRoomMessages,
+  generateSocialFeed,
+  loadApiKey,
+  saveApiKey,
+  validateApiKey,
+  type LLMAdapter,
+} from "@potential/agent";
+import {
+  DialogueBox,
+  MonologueTicker,
+  PromptInput,
+  RoomCanvas,
+  StatBar,
+  buttonStyle,
+  loadAtlas,
+  objectFootprints,
+  playBark,
+  playObjectCue,
+  type SpeechEvent,
+  type SpriteAtlas,
+} from "@potential/renderer";
+import { GameEngine, LifeEndedError } from "./engine/engine.js";
+
+// Renderer stays decoupled from the catalog; the app feeds it footprints.
+for (const asset of ASSET_CATALOG) {
+  if (asset.kind === "object") objectFootprints.set(asset.id, { w: asset.w, h: asset.h });
+}
+
+type Screen =
+  | { kind: "boot" }
+  | { kind: "byok"; error?: string; busy?: boolean }
+  | { kind: "menu"; resumable: boolean }
+  | { kind: "newlife" }
+  | { kind: "playing" }
+  | { kind: "dead"; context: LifeContext };
+
+type BottomMode =
+  | { kind: "explore" }
+  | { kind: "dialogue"; speaker: string | null; text: string; then: BottomMode; voice: string }
+  | { kind: "converse"; npc: WorldObject; history: { speaker: "player" | "character"; text: string }[] }
+  | { kind: "input"; purpose: "speak" | "think" };
 
 export default function App(): JSX.Element {
+  const [screen, setScreen] = useState<Screen>({ kind: "boot" });
+  const [atlas, setAtlas] = useState<SpriteAtlas | null>(null);
+  const [adapterKind, setAdapterKind] = useState<"real" | "mock" | null>(null);
+  const [room, setRoom] = useState<Room | null>(null);
+  const [context, setContext] = useState<LifeContext | null>(null);
+  const [monologue, setMonologue] = useState<string[]>([]);
+  const [bottom, setBottom] = useState<BottomMode>({ kind: "explore" });
+  const [target, setTarget] = useState<WorldObject | null>(null);
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [phone, setPhone] = useState<SocialFeedLLMOutput | null | "loading">(null);
+  const [speech, setSpeech] = useState<SpeechEvent | null>(null);
+  const [carryOut, setCarryOut] = useState(false);
+  const engineRef = useRef<GameEngine | null>(null);
+  const speechSeqRef = useRef(0);
+  const lastCryAtRef = useRef(0);
+  // Per-NPC conversation history, so returning to WASD between lines does
+  // not amnesia the exchange. Cleared on room change.
+  const conversationsRef = useRef(new Map<string, { speaker: "player" | "character"; text: string }[]>());
+
+  const speakBubble = useCallback((targetLabel: string, text: string) => {
+    speechSeqRef.current += 1;
+    setSpeech({ targetLabel, text, seq: speechSeqRef.current });
+  }, []);
+
+  const pushMonologue = useCallback((text: string) => {
+    setMonologue((m) => [...m.slice(-30), text]);
+  }, []);
+
+  // Boot: load atlas, check for key.
+  useEffect(() => {
+    void (async () => {
+      const loaded = await loadAtlas("/sprites/atlas.png", "/sprites/atlas.json");
+      setAtlas(loaded);
+      if (loadApiKey() !== null) {
+        setAdapterKind("real");
+        setScreen({ kind: "menu", resumable: await hasResumableLife() });
+      } else {
+        setScreen({ kind: "byok" });
+      }
+    })();
+  }, []);
+
+  // Phone feed prefetch: one Haiku call per room, fired in the background on
+  // entry (only when the player can carry a phone), so opening the phone is
+  // instant instead of a spinner. Cached per room id — reopening is free.
+  const phoneFeedRef = useRef<{ roomId: string; feed: SocialFeedLLMOutput | null } | null>(null);
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (room === null || context === null || engine === null) return;
+    const carriesPhone =
+      context.playerAgeYears >= GAME_CONFIG.phone.phoneAgeYears && context.era !== "industrial";
+    if (!carriesPhone || phoneFeedRef.current?.roomId === room.id) return;
+    phoneFeedRef.current = { roomId: room.id, feed: null };
+    const roster = [...room.objects.values()]
+      .filter((o) => o.characterId !== undefined)
+      .map((o) => o.label);
+    generateSocialFeed(engine.adapter, context, roster)
+      .then((feed) => {
+        if (phoneFeedRef.current?.roomId === room.id) phoneFeedRef.current = { roomId: room.id, feed };
+      })
+      .catch(() => {
+        // Prefetch is best-effort; opening the phone falls back to fetching.
+        if (phoneFeedRef.current?.feed === null) phoneFeedRef.current = null;
+      });
+  }, [room, context]);
+
+  const makeEngine = useCallback(
+    (kind: "real" | "mock"): GameEngine => {
+      const adapter: LLMAdapter =
+        kind === "real" ? new AnthropicAdapter(loadApiKey() ?? "") : new MockAdapter();
+      const engine = new GameEngine(adapter, undefined, {
+        onMonologue: pushMonologue,
+        onGenerationPhase: (phase) => { setGenerating(phase); },
+      });
+      engineRef.current = engine;
+      if (import.meta.env.DEV) {
+        // Dev/test hook: lets browser automation drive the engine directly.
+        (window as unknown as Record<string, unknown>)["__potential"] = { engine };
+      }
+      return engine;
+    },
+    [pushMonologue],
+  );
+
+  const syncFromEngine = useCallback(() => {
+    const engine = engineRef.current;
+    if (engine === null) return;
+    setRoom(engine.currentRoom);
+    setContext(engine.context);
+  }, []);
+
+  const runGenerating = useCallback(
+    async (work: () => Promise<unknown>) => {
+      setGenerating("…");
+      try {
+        await work();
+        syncFromEngine();
+        // Open each room on its story beat — the situation is the plot.
+        const situation = engineRef.current?.currentRoom?.situation;
+        setBottom(
+          situation !== undefined && situation.length > 0
+            ? { kind: "dialogue", speaker: null, text: situation, then: { kind: "explore" }, voice: "" }
+            : { kind: "explore" },
+        );
+      } catch (error) {
+        if (error instanceof LifeEndedError) {
+          setScreen({ kind: "dead", context: error.finalContext });
+        } else {
+          pushMonologue(`Something went wrong: ${error instanceof Error ? error.message : "unknown"}. Walk right to try again.`);
+          // Remount the canvas with a fresh room reference so exit detection
+          // rearms — engine.transition resumes from where it failed.
+          const current = engineRef.current?.currentRoom;
+          if (current !== null && current !== undefined) setRoom({ ...current });
+          setContext(engineRef.current?.context ?? null);
+        }
+      } finally {
+        setGenerating(null);
+      }
+    },
+    [pushMonologue, syncFromEngine],
+  );
+
+  // Room messages: one Haiku call per room schedules the room's "script" —
+  // NPC lines surface as speech bubbles above heads, ambient beats and inner
+  // thoughts go to the ticker. This is the parents talking over the crib.
+  const messagesRoomRef = useRef<string | null>(null);
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (room === null || context === null || engine === null) return;
+    if (messagesRoomRef.current === room.id) return;
+    messagesRoomRef.current = room.id;
+    setCarryOut(false);
+    conversationsRef.current.clear();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    generateRoomMessages(engine.adapter, context, room)
+      .then(({ messages }) => {
+        if (messagesRoomRef.current !== room.id) return;
+        for (const message of messages) {
+          timers.push(
+            setTimeout(() => {
+              if (messagesRoomRef.current !== room.id) return;
+              if (message.kind === "npc_line" && message.characterName !== undefined) {
+                speakBubble(message.characterName, message.text);
+                playBark(message.text, message.characterName, 0.4);
+              } else {
+                pushMonologue(message.text);
+              }
+            }, Math.max(1500, message.atSeconds * 1000)),
+          );
+        }
+      })
+      .catch(() => undefined); // The room just breathes less.
+    return () => {
+      for (const timer of timers) clearTimeout(timer);
+    };
+  }, [room, context, pushMonologue, speakBubble]);
+
+  // Pre-crawl rooms have no exit door the player can reach: when the baby is
+  // calm (no cry) for 10 seconds, the grown-ups gather up and carry life
+  // forward. Crying resets the clock.
+  const canMove = context !== null && isControlUnlocked("move", context);
+  useEffect(() => {
+    if (room === null || canMove || carryOut) return;
+    if (bottom.kind !== "explore" || generating !== null) return;
+    lastCryAtRef.current = Date.now();
+    const interval = setInterval(() => {
+      if (Date.now() - lastCryAtRef.current < 10000) return;
+      clearInterval(interval);
+      pushMonologue("The grown-ups stir, gather their things. The world is about to change again.");
+      // The parent walks you out — the canvas animates the carry, then
+      // onExit fires the transition.
+      setCarryOut(true);
+    }, 500);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [room, canMove, carryOut, bottom.kind, generating, pushMonologue]);
+
+  // ── screens ──────────────────────────────────────────────────────────
+
+  if (screen.kind === "boot" || atlas === null) {
+    return <Shell><Center>Loading…</Center></Shell>;
+  }
+
+  if (screen.kind === "byok") {
+    return (
+      <Shell>
+        <ByokScreen
+          error={screen.error}
+          busy={screen.busy === true}
+          onSubmit={(key) => {
+            void (async () => {
+              setScreen({ kind: "byok", busy: true });
+              const result = await validateApiKey(key);
+              if (!result.ok) {
+                setScreen({ kind: "byok", error: result.error ?? "Validation failed" });
+                return;
+              }
+              saveApiKey(key);
+              setAdapterKind("real");
+              setScreen({ kind: "menu", resumable: await hasResumableLife() });
+            })();
+          }}
+          onDemo={() => {
+            void (async () => {
+              setAdapterKind("mock");
+              setScreen({ kind: "menu", resumable: await hasResumableLife() });
+            })();
+          }}
+        />
+      </Shell>
+    );
+  }
+
+  if (screen.kind === "menu") {
+    return (
+      <Shell>
+        <Center>
+          <h1 style={{ fontFamily: "'Courier New', monospace", letterSpacing: 2 }}>LIFE SIMULATOR</h1>
+          <p style={{ color: "#8d889f", maxWidth: 420, textAlign: "center" }}>
+            Live many short lives. Only the current room exists.
+            {adapterKind === "mock" ? " (demo mode — canned world, no API key)" : ""}
+          </p>
+          <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+            <button style={bigButton} onClick={() => { setScreen({ kind: "newlife" }); }}>
+              New Life
+            </button>
+            {screen.resumable && (
+              <button
+                style={bigButton}
+                onClick={() => {
+                  setScreen({ kind: "playing" });
+                  const engine = makeEngine(adapterKind ?? "mock");
+                  void runGenerating(() => engine.resumeLife());
+                }}
+              >
+                Resume
+              </button>
+            )}
+            <button
+              style={{ ...bigButton, opacity: 0.7 }}
+              onClick={() => {
+                clearApiKey();
+                setAdapterKind(null);
+                setScreen({ kind: "byok" });
+              }}
+            >
+              API Key
+            </button>
+          </div>
+        </Center>
+      </Shell>
+    );
+  }
+
+  if (screen.kind === "newlife") {
+    return (
+      <Shell>
+        <NewLifeScreen
+          onStart={(name, era, birthYear) => {
+            setScreen({ kind: "playing" });
+            setMonologue([]);
+            const engine = makeEngine(adapterKind ?? "mock");
+            void runGenerating(() =>
+              engine.startNewLife({
+                playerName: name,
+                birthDate: `${String(birthYear)}-06-15`,
+                era,
+                natureStats: randomNature(),
+              }),
+            );
+          }}
+        />
+      </Shell>
+    );
+  }
+
+  if (screen.kind === "dead") {
+    const ended = screen.context;
+    return (
+      <Shell>
+        <Center>
+          <h2 style={{ fontFamily: "'Courier New', monospace" }}>
+            {ended.playerName} — {ended.birthDate.slice(0, 4)}–{ended.worldDate.slice(0, 4)}
+          </h2>
+          <p style={{ color: "#8d889f" }}>
+            Died at {Math.floor(ended.playerAgeYears)}, {ended.causeOfDeath ?? "of unknown causes"}.
+          </p>
+          <div style={{ maxWidth: 520, maxHeight: "40vh", overflowY: "auto", margin: "12px 0" }}>
+            {ended.lifeEvents.map((e) => (
+              <p key={e.roomId} style={{ color: "#bdb8d0", fontFamily: "'Courier New', monospace", fontSize: 14 }}>
+                [{Math.floor(e.playerAgeYears)}] {e.narrative}
+              </p>
+            ))}
+          </div>
+          <button
+            style={bigButton}
+            onClick={() => {
+              void (async () => {
+                await engineRef.current?.reset();
+                setRoom(null);
+                setContext(null);
+                setScreen({ kind: "menu", resumable: false });
+              })();
+            }}
+          >
+            Live Again
+          </button>
+        </Center>
+      </Shell>
+    );
+  }
+
+  // ── playing ──────────────────────────────────────────────────────────
+
+  const engine = engineRef.current;
+  const paused = bottom.kind !== "explore" || generating !== null || phone !== null;
+  // Every control derives from the CONTROLS registry — unlocked over a life.
+  const canInteract = context !== null && isControlUnlocked("interact", context);
+  const canSpeak = context !== null && isControlUnlocked("speak", context);
+  const canCry = context !== null && isControlUnlocked("cry", context);
+  const hasPhone = context !== null && isControlUnlocked("phone", context);
+
+  const handleInteract = (object: WorldObject): void => {
+    if (engine === null || paused) return;
+    if (object.characterId !== undefined) {
+      setBottom({ kind: "converse", npc: object, history: conversationsRef.current.get(object.id) ?? [] });
+      return;
+    }
+    playObjectCue(object.audio, object.label);
+    const interaction = object.interaction;
+    if (interaction?.type === "pick_up") {
+      // Local action — no LLM call for grabbing a toy.
+      engine.pickUp(object);
+      syncFromEngine();
+      setTarget(null);
+      pushMonologue(`You take the ${object.label.toLowerCase()}. Yours now.`);
+      return;
+    }
+    if (interaction?.text !== undefined && interaction.type === "examine") {
+      // Examine with canned text: free, instant, no LLM call.
+      engine.recordEvent({
+        type: "interaction",
+        description: `Examined ${object.label}`,
+        playerChoice: "examine",
+        outcome: interaction.text,
+        characterIds: [],
+      });
+      setBottom({ kind: "dialogue", speaker: null, text: interaction.text, then: { kind: "explore" }, voice: "" });
+      return;
+    }
+    void (async () => {
+      setGenerating("…");
+      try {
+        const result = await engine.interactWith(object, interaction?.type ?? "use");
+        syncFromEngine();
+        setBottom({ kind: "dialogue", speaker: null, text: result.outcome, then: { kind: "explore" }, voice: "" });
+      } catch (error) {
+        pushMonologue(`(${error instanceof Error ? error.message : "the world hiccuped"})`);
+      } finally {
+        setGenerating(null);
+      }
+    })();
+  };
+
+  const handleConversationLine = (npc: WorldObject, history: { speaker: "player" | "character"; text: string }[], line: string): void => {
+    if (engine === null) return;
+    void (async () => {
+      setGenerating("…");
+      try {
+        const { response, character, spokenText } = await engine.talkTo(npc, line, history);
+        if (spokenText !== line) pushMonologue(`What you meant: "${line}". What came out: "${spokenText}"`);
+        syncFromEngine();
+        const newHistory = [
+          ...history,
+          { speaker: "player" as const, text: spokenText },
+          { speaker: "character" as const, text: response.dialogue },
+        ];
+        playBark(response.dialogue, character.name);
+        // Spoken words live above the speaker's head, not in a bottom box —
+        // and you go straight back to WASD. Press E again to keep talking;
+        // the exchange is remembered per character for this room.
+        speakBubble(character.name, response.dialogue);
+        conversationsRef.current.set(npc.id, newHistory.slice(-12));
+        setBottom({ kind: "explore" });
+      } catch (error) {
+        pushMonologue(`(${error instanceof Error ? error.message : "they didn't hear you"})`);
+        setBottom({ kind: "explore" });
+      } finally {
+        setGenerating(null);
+      }
+    })();
+  };
+
+  // Cry — the pre-verbal toolkit. Hunger care in the engine, a wail in the
+  // air, and the nearest caregiver answers from across the room.
+  const handleCry = (): void => {
+    if (engine === null || room === null || generating !== null) return;
+    lastCryAtRef.current = Date.now();
+    engine.cry();
+    syncFromEngine();
+    playBark("waaah waah", context?.playerName ?? "baby", 0.6);
+    const npc = [...room.objects.values()].find((o) => o.characterId !== undefined);
+    if (npc === undefined) return;
+    void (async () => {
+      try {
+        const { response, character } = await engine.talkTo(npc, "(cries)");
+        lastCryAtRef.current = Date.now();
+        syncFromEngine();
+        playBark(response.dialogue, character.name, 0.5);
+        speakBubble(character.name, response.dialogue);
+      } catch {
+        // They were always going to come anyway.
+      }
+    })();
+  };
+
+  const handleFreeText = (purpose: "speak" | "think", text: string): void => {
+    if (engine === null) return;
+    if (purpose === "think") {
+      engine.recordEvent({
+        type: "thought",
+        description: "A private thought",
+        playerChoice: text.slice(0, 200),
+        outcome: "",
+        characterIds: [],
+      });
+      pushMonologue(text);
+      setBottom({ kind: "explore" });
+      return;
+    }
+    // Pre-verbal: the words don't exist yet. No intent to classify — the
+    // babble just hangs in the air (talking AT someone goes through [E]).
+    const age = engine.context?.playerAgeYears ?? Infinity;
+    if (isPreverbal(age)) {
+      const babble = babbleize(text, age);
+      engine.recordEvent({
+        type: "speech",
+        description: "Babbled aloud",
+        playerChoice: babble.slice(0, 200),
+        outcome: "",
+        characterIds: [],
+      });
+      pushMonologue(`You try to say it. What comes out: "${babble}"`);
+      setBottom({ kind: "explore" });
+      return;
+    }
+    void (async () => {
+      setGenerating("…");
+      try {
+        const intent = await engine.classifyInput(text);
+        syncFromEngine();
+        if (intent.intent === "talk" && room !== null) {
+          const npc =
+            [...room.objects.values()].find(
+              (o) => o.characterId !== undefined && o.label.toLowerCase() === intent.targetLabel?.toLowerCase(),
+            ) ?? [...room.objects.values()].find((o) => o.characterId !== undefined);
+          if (npc !== undefined) {
+            handleConversationLine(npc, [], intent.utterance ?? text);
+            return;
+          }
+        }
+        if (intent.intent === "leave") {
+          pushMonologue("Time to go.");
+          setBottom({ kind: "explore" });
+          void runGenerating(() => engine.transition(text));
+          return;
+        }
+        engine.recordEvent({
+          type: "speech",
+          description: "Said aloud",
+          playerChoice: text.slice(0, 200),
+          outcome: "The words hang in the air.",
+          characterIds: [],
+        });
+        pushMonologue(`You say it out loud: "${text}"`);
+        setBottom({ kind: "explore" });
+      } catch (error) {
+        pushMonologue(`(${error instanceof Error ? error.message : "the thought slipped away"})`);
+        setBottom({ kind: "explore" });
+      } finally {
+        setGenerating(null);
+      }
+    })();
+  };
+
+  const openPhone = (): void => {
+    if (engine === null || engine.context === null || !hasPhone) return;
+    // Prefetched on room entry — usually instant.
+    const cached = phoneFeedRef.current;
+    if (cached !== null && cached.roomId === room?.id && cached.feed !== null) {
+      setPhone(cached.feed);
+      return;
+    }
+    setPhone("loading");
+    void (async () => {
+      try {
+        const roster = [...(room?.objects.values() ?? [])]
+          .filter((o) => o.characterId !== undefined)
+          .map((o) => o.label);
+        const feed = await generateSocialFeed(engine.adapter, engine.context as LifeContext, roster);
+        if (room !== null) phoneFeedRef.current = { roomId: room.id, feed };
+        setPhone(feed);
+      } catch {
+        setPhone({ posts: [{ authorName: "System", text: "No signal.", likes: 0, postedAgo: "now" }] });
+      }
+    })();
+  };
+
   return (
-    <div>
-      <h1>Life Simulator</h1>
-      <p>Loading…</p>
+    <Shell>
+      {/* top band */}
+      <div style={{ display: "flex", alignItems: "center", height: "8%", minHeight: 40, background: "#16141f", borderBottom: "2px solid #23213a" }}>
+        <MonologueTicker entries={monologue} />
+        {context !== null && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 12px" }}>
+            <TimeDial
+              value={context.preferredRoomDuration}
+              onChange={(d) => {
+                void engine?.setTimeDial(d);
+                syncFromEngine();
+              }}
+            />
+            <span style={{ color: "#8d889f", fontFamily: "monospace", fontSize: 12 }}>
+              {context.playerName} · {formatAge(context.playerAgeYears)} · ${Math.round(context.money)} · {context.worldDate}
+            </span>
+            {(context.inventory?.length ?? 0) > 0 && (
+              <span
+                title={(context.inventory ?? []).join(", ")}
+                style={{ color: "#e3c350", fontFamily: "monospace", fontSize: 12, cursor: "help" }}
+              >
+                inv {context.inventory?.length}
+              </span>
+            )}
+            <StatBar value={context.health} color="#c54e44" label="HP" />
+            <StatBar value={context.hunger} color="#5d9e4c" label="F" />
+          </div>
+        )}
+      </div>
+
+      {/* viewport — no room titles: events are experienced, never announced */}
+      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+        {room !== null && (
+          <RoomCanvas
+            room={room}
+            atlas={atlas}
+            playerAssetId={playerAsset(context?.playerAgeYears ?? 30)}
+            paused={paused}
+            canMove={canMove}
+            canInteract={canInteract}
+            carryOut={carryOut}
+            speech={speech}
+            onInteract={handleInteract}
+            onExit={() => {
+              if (engine !== null && generating === null) void runGenerating(() => engine.transition());
+            }}
+            onTargetChange={setTarget}
+          />
+        )}
+        {generating !== null && <GeneratingOverlay phase={generating} />}
+        {phone !== null && (
+          <PhoneOverlay feed={phone} onClose={() => { setPhone(null); }} />
+        )}
+      </div>
+
+      {/* bottom band */}
+      <div style={{ minHeight: 84, padding: 10, background: "#16141f", borderTop: "2px solid #23213a" }}>
+        {bottom.kind === "dialogue" && (
+          <DialogueBox
+            speaker={bottom.speaker}
+            text={bottom.text}
+            onAdvance={() => { setBottom(bottom.then); }}
+          />
+        )}
+        {bottom.kind === "converse" && (
+          <PromptInput
+            placeholder={
+              isPreverbal(context?.playerAgeYears ?? Infinity)
+                ? `Try to talk to ${bottom.npc.label}… it will come out as baby talk (Esc to walk away)`
+                : `Say something to ${bottom.npc.label}… (Esc to walk away)`
+            }
+            onSubmit={(text) => { handleConversationLine(bottom.npc, bottom.history, text); }}
+            onCancel={() => { setBottom({ kind: "explore" }); }}
+          />
+        )}
+        {bottom.kind === "input" && (
+          <PromptInput
+            placeholder={
+              bottom.purpose === "think"
+                ? "What's on your mind…"
+                : isPreverbal(context?.playerAgeYears ?? Infinity)
+                  ? "Try to say it… (you can't talk yet)"
+                  : "Say it out loud…"
+            }
+            onSubmit={(text) => { handleFreeText(bottom.purpose, text); }}
+            onCancel={() => { setBottom({ kind: "explore" }); }}
+          />
+        )}
+        {bottom.kind === "explore" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "'Courier New', monospace", fontSize: 13, color: "#8d889f" }}>
+            <span style={{ flex: 1 }}>
+              {target !== null && canInteract
+                ? `[E] ${target.characterId !== undefined ? "Talk to" : target.interaction?.type === "examine" ? "Examine" : "Use"} ${target.label}`
+                : canMove
+                  ? "WASD/arrows to move · Shift to sit · walk right to move on with life"
+                  : "You are small. The world carries you."}
+            </span>
+            {canCry && (
+              <button style={buttonStyle} onClick={handleCry}>
+                Cry [C]
+              </button>
+            )}
+            <button style={buttonStyle} onClick={() => { setBottom({ kind: "input", purpose: "think" }); }}>
+              Think [T]
+            </button>
+            {canSpeak && (
+              <button style={buttonStyle} onClick={() => { setBottom({ kind: "input", purpose: "speak" }); }}>
+                Speak [Y]
+              </button>
+            )}
+            {hasPhone && (
+              <button style={buttonStyle} onClick={openPhone}>
+                Phone [P]
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      <ExploreHotkeys
+        active={bottom.kind === "explore" && generating === null && phone === null}
+        onThink={() => { setBottom({ kind: "input", purpose: "think" }); }}
+        onSpeak={canSpeak ? () => { setBottom({ kind: "input", purpose: "speak" }); } : undefined}
+        onCry={canCry ? handleCry : undefined}
+        onPhone={hasPhone ? openPhone : undefined}
+      />
+    </Shell>
+  );
+}
+
+// ── helper components ───────────────────────────────────────────────────
+
+function Shell({ children }: { children: React.ReactNode }): JSX.Element {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        flexDirection: "column",
+        background: "#0e0d14",
+        color: "#f2f2ee",
+      }}
+    >
+      {children}
     </div>
   );
 }
+
+function Center({ children }: { children: React.ReactNode }): JSX.Element {
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+      {children}
+    </div>
+  );
+}
+
+function ByokScreen({
+  error,
+  busy,
+  onSubmit,
+  onDemo,
+}: {
+  error?: string | undefined;
+  busy: boolean;
+  onSubmit: (key: string) => void;
+  onDemo: () => void;
+}): JSX.Element {
+  const [key, setKey] = useState("");
+  return (
+    <Center>
+      <h1 style={{ fontFamily: "'Courier New', monospace", letterSpacing: 2 }}>LIFE SIMULATOR</h1>
+      <p style={{ color: "#8d889f", maxWidth: 460, textAlign: "center" }}>
+        This game runs on your own Anthropic API key. It never leaves this device. Get one at
+        console.anthropic.com — a full life costs roughly $1.50–6 in API usage.
+      </p>
+      <input
+        type="password"
+        value={key}
+        placeholder="sk-ant-…"
+        onChange={(e) => { setKey(e.target.value); }}
+        style={{
+          width: 380,
+          background: "#16141f",
+          color: "#f2f2ee",
+          border: "3px solid #f2f2ee",
+          borderRadius: 6,
+          padding: "10px 12px",
+          fontFamily: "monospace",
+        }}
+      />
+      {error !== undefined && <p style={{ color: "#c54e44", maxWidth: 420, textAlign: "center" }}>{error}</p>}
+      <div style={{ display: "flex", gap: 12 }}>
+        <button style={bigButton} disabled={busy} onClick={() => { onSubmit(key); }}>
+          {busy ? "Checking…" : "Save Key"}
+        </button>
+        <button style={{ ...bigButton, opacity: 0.7 }} onClick={onDemo}>
+          Demo Mode (no key)
+        </button>
+      </div>
+    </Center>
+  );
+}
+
+function NewLifeScreen({ onStart }: { onStart: (name: string, era: Era, birthYear: number) => void }): JSX.Element {
+  const [name, setName] = useState("");
+  const [eraChoice, setEraChoice] = useState<"industrial" | "modern" | "near-future">("modern");
+  const years = useMemo(() => ({ industrial: 1885, modern: 1985, "near-future": 2042 }), []);
+  return (
+    <Center>
+      <h2 style={{ fontFamily: "'Courier New', monospace" }}>A new life</h2>
+      <input
+        value={name}
+        placeholder="Name"
+        maxLength={GAME_CONFIG.contentSafety.maxNameChars}
+        onChange={(e) => { setName(e.target.value); }}
+        style={{
+          width: 280,
+          background: "#16141f",
+          color: "#f2f2ee",
+          border: "3px solid #f2f2ee",
+          borderRadius: 6,
+          padding: "10px 12px",
+          fontFamily: "'Courier New', monospace",
+        }}
+      />
+      <div style={{ display: "flex", gap: 8 }}>
+        {(["industrial", "modern", "near-future"] as const).map((era) => (
+          <button
+            key={era}
+            style={{ ...buttonStyle, background: era === eraChoice ? "#4f74b3" : "#2b2940" }}
+            onClick={() => { setEraChoice(era); }}
+          >
+            {era} ({years[era]})
+          </button>
+        ))}
+      </div>
+      <button
+        style={bigButton}
+        onClick={() => {
+          const clean = sanitizeName(name);
+          if (clean.length > 0) onStart(clean, eraChoice, years[eraChoice]);
+        }}
+      >
+        Be Born
+      </button>
+    </Center>
+  );
+}
+
+function GeneratingOverlay({ phase }: { phase: string }): JSX.Element {
+  // After 20s the player deserves to know the API is dragging, not the game
+  // hanging. Calls time out at 60s and the transition is retryable.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    const timer = setTimeout(() => { setSlow(true); }, 20000);
+    return () => { clearTimeout(timer); };
+  }, [phase]);
+  return (
+    <div style={overlayStyle}>
+      <div style={{ textAlign: "center" }}>
+        <div className="spin" style={{ fontSize: 26 }}>◐</div>
+        <p style={{ fontFamily: "'Courier New', monospace", fontStyle: "italic" }}>{phase}</p>
+        {slow && (
+          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 12, color: "#8d889f" }}>
+            (the API is taking its time — hang tight, this gives up at 60s and lets you retry)
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PhoneOverlay({
+  feed,
+  onClose,
+}: {
+  feed: SocialFeedLLMOutput | "loading";
+  onClose: () => void;
+}): JSX.Element {
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div
+        onClick={(e) => { e.stopPropagation(); }}
+        style={{
+          width: "min(40%, 360px)",
+          height: "76%",
+          background: "#1b1926",
+          border: "3px solid #f2f2ee",
+          outline: "3px solid #23213a",
+          borderRadius: 18,
+          padding: 14,
+          overflowY: "auto",
+          fontFamily: "'Courier New', monospace",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <strong>Feed</strong>
+          <button style={buttonStyle} onClick={onClose}>✕</button>
+        </div>
+        {feed === "loading" ? (
+          <p style={{ color: "#8d889f" }}>Loading…</p>
+        ) : (
+          feed.posts.map((post, i) => (
+            <div key={i} style={{ borderBottom: "1px solid #2b2940", padding: "8px 0" }}>
+              <strong style={{ fontSize: 13 }}>{post.authorName}</strong>
+              <span style={{ color: "#8d889f", fontSize: 11 }}> · {post.postedAgo}</span>
+              <p style={{ margin: "4px 0", fontSize: 13 }}>{post.text}</p>
+              <span style={{ color: "#8d889f", fontSize: 11 }}>♥ {post.likes}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExploreHotkeys({
+  active,
+  onThink,
+  onSpeak,
+  onCry,
+  onPhone,
+}: {
+  active: boolean;
+  onThink: () => void;
+  onSpeak?: (() => void) | undefined;
+  onCry?: (() => void) | undefined;
+  onPhone?: (() => void) | undefined;
+}): JSX.Element | null {
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "t") onThink();
+      if (e.key === "y") onSpeak?.();
+      if (e.key === "c") onCry?.();
+      if (e.key === "p") onPhone?.();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); };
+  }, [active, onThink, onSpeak, onCry, onPhone]);
+  return null;
+}
+
+const TIME_DIAL_STOPS: (RoomDuration | undefined)[] = [undefined, "day", "week", "month", "year"];
+
+/** The time dial — a horizontal bar with a thumb. Leftmost = the story decides. */
+function TimeDial({
+  value,
+  onChange,
+}: {
+  value: RoomDuration | undefined;
+  onChange: (d: RoomDuration | undefined) => void;
+}): JSX.Element {
+  const index = Math.max(0, TIME_DIAL_STOPS.indexOf(value));
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Time per room — how much life each scene covers">
+      <span style={{ color: "#8d889f", fontFamily: "monospace", fontSize: 11 }}>time</span>
+      <input
+        type="range"
+        min={0}
+        max={TIME_DIAL_STOPS.length - 1}
+        step={1}
+        value={index}
+        onChange={(e) => { onChange(TIME_DIAL_STOPS[Number(e.target.value)]); }}
+        style={{ width: 90, accentColor: "#e3c350", cursor: "pointer" }}
+      />
+      <span style={{ color: "#e3c350", fontFamily: "monospace", fontSize: 11, width: 38 }}>
+        {value ?? "auto"}
+      </span>
+    </div>
+  );
+}
+
+// ── helpers ─────────────────────────────────────────────────────────────
+
+/** Under 2 the HUD shows months — "0y" for half a year reads as a bug. */
+function formatAge(years: number): string {
+  if (years < 2) return `${String(Math.max(0, Math.round(years * 12)))}mo`;
+  return `${String(Math.floor(years))}y`;
+}
+
+function playerAsset(age: number): string {
+  if (age < 1) return "chr_baby";
+  if (age < 4) return "chr_toddler";
+  if (age < 13) return "chr_child";
+  if (age < 18) return "chr_teen";
+  if (age < 45) return "chr_adult_casual";
+  if (age < 62) return "chr_middle_aged";
+  return "chr_senior";
+}
+
+function randomNature(): { curiosity: number; resilience: number; empathy: number; ambition: number; creativity: number } {
+  const roll = (): number => 20 + Math.floor(Math.random() * 61);
+  return { curiosity: roll(), resilience: roll(), empathy: roll(), ambition: roll(), creativity: roll() };
+}
+
+const bigButton: React.CSSProperties = {
+  ...buttonStyle,
+  fontSize: 16,
+  padding: "10px 22px",
+};
+
+const overlayStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  background: "rgba(14, 13, 20, 0.6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 10,
+};

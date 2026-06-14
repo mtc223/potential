@@ -1,4 +1,4 @@
 // React component exports
-// Placeholder — awaiting AC for Phase 3 (Polish the Surface)
-
-export { RoomView } from "./RoomView.js";
+export { RoomCanvas, type RoomCanvasProps, type SpeechEvent } from "./RoomCanvas.js";
+export { DialogueBox, type DialogueBoxProps } from "./DialogueBox.js";
+export { MonologueTicker, StatBar, PromptInput, buttonStyle } from "./HudOverlays.js";

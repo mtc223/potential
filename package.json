@@ -8,6 +8,7 @@
     "type-check": "turbo run type-check",
     "test": "turbo run test",
     "clean": "turbo run clean",
+    "sprites": "pnpm --filter @potential/shared build && node scripts/generate-sprites.mjs",
     "prepare": "husky"
   },
   "devDependencies": {

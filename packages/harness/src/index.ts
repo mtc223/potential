@@ -3,4 +3,4 @@
 
 export * from "./db/index.js";
 export * from "./store/index.js";
-export * from "./room-exit.js";
+export * from "./life/index.js";

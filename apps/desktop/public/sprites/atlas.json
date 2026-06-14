@@ -1,0 +1,1679 @@
+{
+ "tileSize": 32,
+ "width": 1024,
+ "height": 704,
+ "sprites": {
+  "conference_table": {
+   "x": 0,
+   "y": 0,
+   "w": 96,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 2
+  },
+  "pond": {
+   "x": 96,
+   "y": 0,
+   "w": 96,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 2
+  },
+  "ping_pong_table": {
+   "x": 192,
+   "y": 0,
+   "w": 96,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 2
+  },
+  "rug": {
+   "x": 288,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "dining_table": {
+   "x": 352,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "double_bed": {
+   "x": 416,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "gym_mat": {
+   "x": 480,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "forklift": {
+   "x": 544,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "scaffolding": {
+   "x": 608,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "slide": {
+   "x": 672,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "sandbox": {
+   "x": 736,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "picnic_table": {
+   "x": 800,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "tent": {
+   "x": 864,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "lifeguard_tower": {
+   "x": 928,
+   "y": 0,
+   "w": 64,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 2
+  },
+  "single_bed": {
+   "x": 992,
+   "y": 0,
+   "w": 32,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 2
+  },
+  "curtain_divider": {
+   "x": 0,
+   "y": 64,
+   "w": 32,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 2
+  },
+  "beach_towel": {
+   "x": 32,
+   "y": 64,
+   "w": 32,
+   "h": 64,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 2
+  },
+  "chr_baby": {
+   "x": 64,
+   "y": 64,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_toddler": {
+   "x": 448,
+   "y": 64,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_child": {
+   "x": 0,
+   "y": 128,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_child_b": {
+   "x": 384,
+   "y": 128,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_child_c": {
+   "x": 0,
+   "y": 160,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_teen": {
+   "x": 384,
+   "y": 160,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_teen_b": {
+   "x": 0,
+   "y": 192,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_teen_c": {
+   "x": 384,
+   "y": 192,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_casual": {
+   "x": 0,
+   "y": 224,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_casual_b": {
+   "x": 384,
+   "y": 224,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_casual_c": {
+   "x": 0,
+   "y": 256,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_casual_d": {
+   "x": 384,
+   "y": 256,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_formal": {
+   "x": 0,
+   "y": 288,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_formal_b": {
+   "x": 384,
+   "y": 288,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_worker": {
+   "x": 0,
+   "y": 320,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_adult_worker_b": {
+   "x": 384,
+   "y": 320,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_middle_aged": {
+   "x": 0,
+   "y": 352,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_middle_aged_b": {
+   "x": 384,
+   "y": 352,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_senior": {
+   "x": 0,
+   "y": 384,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_senior_b": {
+   "x": 384,
+   "y": 384,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_doctor": {
+   "x": 0,
+   "y": 416,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_nurse": {
+   "x": 384,
+   "y": 416,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_teacher": {
+   "x": 0,
+   "y": 448,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_police": {
+   "x": 384,
+   "y": 448,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "chr_chef": {
+   "x": 0,
+   "y": 480,
+   "w": 384,
+   "h": 32,
+   "kind": "character",
+   "frames": 12,
+   "frameW": 32,
+   "frameH": 32
+  },
+  "couch": {
+   "x": 384,
+   "y": 480,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "chalkboard": {
+   "x": 480,
+   "y": 480,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "locker_row": {
+   "x": 576,
+   "y": 480,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "cafeteria_table": {
+   "x": 672,
+   "y": 480,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "bleachers": {
+   "x": 768,
+   "y": 480,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "metal_shelving": {
+   "x": 864,
+   "y": 480,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "conveyor_belt": {
+   "x": 0,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "bar_counter": {
+   "x": 96,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "retail_shelf": {
+   "x": 192,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "swing_set": {
+   "x": 288,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "monkey_bars": {
+   "x": 384,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "fence": {
+   "x": 480,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "storefront": {
+   "x": 576,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "car_dashboard": {
+   "x": 672,
+   "y": 512,
+   "w": 96,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 3,
+   "hTiles": 1
+  },
+  "crib": {
+   "x": 768,
+   "y": 512,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "changing_table": {
+   "x": 832,
+   "y": 512,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "coffee_table": {
+   "x": 896,
+   "y": 512,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "tv_stand": {
+   "x": 960,
+   "y": 512,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "fireplace": {
+   "x": 0,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "kitchen_counter": {
+   "x": 64,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "bathtub": {
+   "x": 128,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "dresser": {
+   "x": 192,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "wardrobe": {
+   "x": 256,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "desk": {
+   "x": 320,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "teacher_desk": {
+   "x": 384,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "bulletin_board": {
+   "x": 448,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "trophy_case": {
+   "x": 512,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "cubicle": {
+   "x": 576,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "office_desk": {
+   "x": 640,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "whiteboard": {
+   "x": 704,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "workbench": {
+   "x": 768,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "cement_mixer": {
+   "x": 832,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "restaurant_table": {
+   "x": 896,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "produce_display": {
+   "x": 960,
+   "y": 544,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "grill": {
+   "x": 0,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "prep_table": {
+   "x": 64,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "hospital_bed": {
+   "x": 128,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "exam_table": {
+   "x": 192,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "puzzle_table": {
+   "x": 256,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "flower_bed": {
+   "x": 320,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "park_bench": {
+   "x": 384,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "seesaw": {
+   "x": 448,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "bus_stop": {
+   "x": 512,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "dumpster": {
+   "x": 576,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "fallen_log": {
+   "x": 640,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "bus_seat_row": {
+   "x": 704,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "covered_furniture": {
+   "x": 768,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "piano": {
+   "x": 832,
+   "y": 576,
+   "w": 64,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 2,
+   "hTiles": 1
+  },
+  "floor_wood": {
+   "x": 896,
+   "y": 576,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_carpet": {
+   "x": 928,
+   "y": 576,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_tile": {
+   "x": 960,
+   "y": 576,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_linoleum": {
+   "x": 992,
+   "y": 576,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_concrete": {
+   "x": 0,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_grass": {
+   "x": 32,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_dirt": {
+   "x": 64,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_asphalt": {
+   "x": 96,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_sand": {
+   "x": 128,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "floor_gym": {
+   "x": 160,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "floor"
+  },
+  "wall_plaster": {
+   "x": 192,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_wallpaper": {
+   "x": 224,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_brick": {
+   "x": 256,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_school": {
+   "x": 288,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_hospital": {
+   "x": 320,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_office": {
+   "x": 352,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_industrial": {
+   "x": 384,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "wall_hedge": {
+   "x": 416,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "wall"
+  },
+  "rocking_chair": {
+   "x": 448,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "toy_chest": {
+   "x": 480,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "stuffed_animal": {
+   "x": 512,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "night_light": {
+   "x": 544,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "highchair": {
+   "x": 576,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "building_blocks": {
+   "x": 608,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "armchair": {
+   "x": 640,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "bookshelf": {
+   "x": 672,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "family_photo": {
+   "x": 704,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "floor_lamp": {
+   "x": 736,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "houseplant": {
+   "x": 768,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "kitchen_chair": {
+   "x": 800,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "stove": {
+   "x": 832,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "refrigerator": {
+   "x": 864,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "kitchen_sink": {
+   "x": 896,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "microwave": {
+   "x": 928,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "fruit_bowl": {
+   "x": 960,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "toilet": {
+   "x": 992,
+   "y": 608,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "bathroom_sink": {
+   "x": 0,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "mirror": {
+   "x": 32,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "nightstand": {
+   "x": 64,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "desk_chair": {
+   "x": 96,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "computer": {
+   "x": 128,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "poster": {
+   "x": 160,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "guitar": {
+   "x": 192,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "clothes_pile": {
+   "x": 224,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "laundry_hamper": {
+   "x": 256,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "student_desk": {
+   "x": 288,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "globe": {
+   "x": 320,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "water_fountain": {
+   "x": 352,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "basketball_hoop": {
+   "x": 384,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "office_chair": {
+   "x": 416,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "filing_cabinet": {
+   "x": 448,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "water_cooler": {
+   "x": 480,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "printer": {
+   "x": 512,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "coffee_machine": {
+   "x": 544,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "vending_machine": {
+   "x": 576,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "motivational_poster": {
+   "x": 608,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "pallet": {
+   "x": 640,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "box_stack": {
+   "x": 672,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "time_clock": {
+   "x": 704,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "hand_truck": {
+   "x": 736,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "safety_sign": {
+   "x": 768,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "toolbox": {
+   "x": 800,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "safety_cone": {
+   "x": 832,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "wheelbarrow": {
+   "x": 864,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "cash_register": {
+   "x": 896,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "deep_fryer": {
+   "x": 928,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "bar_stool": {
+   "x": 960,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "shopping_cart": {
+   "x": 992,
+   "y": 640,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "iv_stand": {
+   "x": 0,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "patient_monitor": {
+   "x": 32,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "visitor_chair": {
+   "x": 64,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "medical_poster": {
+   "x": 96,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "wheelchair": {
+   "x": 128,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "walker": {
+   "x": 160,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "tree": {
+   "x": 192,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "bush": {
+   "x": 224,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "street_lamp": {
+   "x": 256,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "mailbox": {
+   "x": 288,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "bbq_grill": {
+   "x": 320,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "trash_can": {
+   "x": 352,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "fire_hydrant": {
+   "x": 384,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "traffic_light": {
+   "x": 416,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "campfire": {
+   "x": 448,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "boulder": {
+   "x": 480,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "beach_umbrella": {
+   "x": 512,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "sandcastle": {
+   "x": 544,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "gravestone": {
+   "x": 576,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "wilted_flowers": {
+   "x": 608,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "car_seat": {
+   "x": 640,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "steering_wheel": {
+   "x": 672,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "washer": {
+   "x": 704,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "dryer": {
+   "x": 736,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "water_heater": {
+   "x": 768,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "dusty_box": {
+   "x": 800,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "phone_booth": {
+   "x": 832,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "birthday_cake": {
+   "x": 864,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  },
+  "present_box": {
+   "x": 896,
+   "y": 672,
+   "w": 32,
+   "h": 32,
+   "kind": "object",
+   "wTiles": 1,
+   "hTiles": 1
+  }
+ }
+}
