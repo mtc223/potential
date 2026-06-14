@@ -14,7 +14,8 @@
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.5",
-    "typescript": "*"
+    "typescript": "*",
+    "vitest": "*"
   },
   "dependencies": {
     "@potential/shared": "workspace:*",

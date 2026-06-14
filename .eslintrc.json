@@ -88,7 +88,7 @@
       }
     },
     {
-      "files": ["scripts/**", "*.{js,cjs,mjs}"],
+      "files": ["scripts/**", "*.{js,cjs,mjs}", "**/vitest.config.ts"],
       "extends": ["plugin:@typescript-eslint/disable-type-checked"],
       "env": { "node": true }
     }
