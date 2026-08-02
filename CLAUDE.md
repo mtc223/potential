@@ -41,6 +41,7 @@ You are a senior engineering collaborator and design partner. You are the implem
 ### Design Philosophy
 
 - **Lifeward** — the guiding principle. Every mechanic serves the experience of living forward.
+- **Deathward** — the counterweight principle. Everything not held is being taken. Every WorldObject carries a vitality scalar that decays deterministically; player attention (measured via telemetry) is the only restoring force. All hardship traces to this decay field — nothing bad happens arbitrarily. See `docs/LifeSimulator_DeathwardDesign_v1.md`.
 - **Open-path, not open-world** — the room architecture is a singly-linked append-only list. Players explore branching futures, not revisitable spatial locations. Never conflate with open-world design.
 - **Epistemological premise** — only the current room is observable reality. Generated rooms may have always existed or may have just been created. The observer collapse is intentional.
 - **Everything is a WorldObject** — every entity (NPC, item, room, relationship, job) is a `WorldObject` linked to others via ObjectRefs. Full modularity.
@@ -78,6 +79,7 @@ These are finalized architectural decisions. Any change requires Michael's expli
 | Audio | Audio is a WorldObject property, not a room-level system. |
 | Compression | Fires on room transition, before N+1 candidate generation. Output is a single string. |
 | Sonnet | Handles `prompt_room()` only. Do not route additional functions to Sonnet. |
+| Decay | Vitality decay and all Deathward math are deterministic harness functions. The LLM never decides what decays — it only articulates consequences. |
 | AC gate | `ac_status: needs-ac` is a hard gate. No implementation begins without PM-written AC. |
 
 ---
@@ -203,7 +205,7 @@ potential/
 │   └── renderer/         # React pixel art components, sprite rendering
 ├── internal/
 │   └── sprite-viewer/    # Dev-only sprite catalog browser (index.html + catalog.json)
-├── docs/                 # All 11 design documents + index.md
+├── docs/                 # All 12 design documents + index.md
 │   └── index.md          # Section-level pointer index — consult when you need a specific section
 ├── scripts/
 │   └── github_setup.js   # Creates repo, labels, milestones, issues, Projects board
@@ -220,7 +222,7 @@ potential/
 
 ## Design Documents
 
-All 11 design docs live in `docs/`. Read them on demand — only when working in that domain. Do not read all of them upfront.
+All 12 design docs live in `docs/`. Read them on demand — only when working in that domain. Do not read all of them upfront.
 
 For the full section-level index (which doc covers which specific topic), see `docs/index.md`.
 
@@ -240,6 +242,7 @@ For the full section-level index (which doc covers which specific topic), see `d
 | Any numeric balance or config value | `LifeSimulator_GameConfig_v1.md` |
 | Assets, sprites, room layout | `LifeSimulator_AssetTaxonomy_v1.md` |
 | Any LLM output path | `LifeSimulator_ContentGuardrails_v1.md` |
+| Decay, bids, hardship, telemetry, promises, obituary | `LifeSimulator_DeathwardDesign_v1.md` |
 | API key flow, Tauri IPC | `LifeSimulator_SecurityDesign_v1.md` |
 
 ---
@@ -307,7 +310,7 @@ Mobile (Android then iOS) follows Steam launch. Asset collection is a separate p
 - WSL2 dev environment setup in progress (PATH conflict documented above)
 - Local git repo initialized (main branch); GitHub remote deferred
 - GitHub setup script ready when needed (`scripts/github_setup.js`)
-- All 11 design documents complete and in `docs/`
+- All 12 design documents complete and in `docs/`
 - Issue backlog and milestones defined (22 issues, 12 milestones)
 - Monorepo scaffold in place — all packages stubbed, ready for Phase 1 implementation
 - Implementation not yet started — all issues currently tagged `ac_status: needs-ac`
