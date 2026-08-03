@@ -1,6 +1,6 @@
 # Life Simulator — Design Document Index
 
-_Section-level reference for all 11 design documents._
+_Section-level reference for all 12 design documents._
 _Claude: you don't need to read this file. Use it as a lookup when you need a specific section from a specific doc._
 
 ---
@@ -210,3 +210,28 @@ BYOK key handling, sandboxing, Tauri IPC security.
 | Sandboxing | How minigame code execution is isolated |
 | Data Privacy | What stays local, what never leaves the device |
 | Threat Model | Known attack surfaces and mitigations |
+
+---
+
+## 12 · Deathward Design v1
+`LifeSimulator_DeathwardDesign_v1.md`
+
+Hardship, decay, and emotion systems — the counterweight principle to Lifeward.
+
+| Section | Contents |
+|---|---|
+| Overview | Deathward principle — everything not held is being taken |
+| Vitality System | Per-object vitality scalar, decay constants, attention credit, burden decay |
+| The Demon | Invisible deterministic decay field, comparative-attention removal, fairness constraints |
+| Bids | Dying entities bid for attention, failed bid → automatic removal, phone as bid inbox |
+| Behavioral Telemetry | Heat map (1 Hz ping grid), social/input/temporal measures, behavioral fingerprint |
+| NPC Stubbornness | Disagreeability dial passed to character_response |
+| Walls, Locks & Tests | Minigame gates, no retries, failure as permanent biography |
+| Promises | Promise WorldObject, witness + deadline, quest replacement |
+| Procedural Foreshadowing | Candidate set leaking into ambient surfaces, decay warnings (tells) |
+| Emotion Recipes | Grief, embarrassment, shame, dread — structural preconditions per emotion |
+| Toys & Tools | Toys teach tool verbs, developmental key tutorial |
+| The Obituary | Vitality ledger as end-of-life score |
+| Balance & Testing | Coverage ratio, cruelty curve, Deathward audit mode for stress harness |
+| Engineering Notes | Object/room registry, pipeline placement, determinism boundary |
+| Open Decisions | Stat drift, decay constants, bid pacing, promise UI, tell legibility |
